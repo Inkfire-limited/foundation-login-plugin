@@ -3,7 +3,7 @@
  * Plugin Name:       Foundation Inkfire Login
  * Plugin URI:        https://github.com/hawks010/foundation-login-plugin/
  * Description:       Replaces the WordPress login screen with the Inkfire two‑column layout (contact panel + login card). Fully responsive, accessible, and supports Login, Lost Password, Reset Password, and Register flows inline. Language switcher under socials. Core #login output is hidden for these actions to avoid duplicate markup/IDs.
- * Version:           1.8.1
+ * Version:           1.8.2
  * Author:            Inkfire
  * Author URI:        https://inkfire.co.uk/
  * Text Domain:       inkfire-login-styler
