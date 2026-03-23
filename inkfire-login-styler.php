@@ -3,7 +3,7 @@
  * Plugin Name:       Foundation - Inkfire Login
  * Plugin URI:        https://github.com/hawks010/foundation-login-plugin/
  * Description:       Enterprise-grade login customizer. Secure, responsive, and branded.
- * Version:           2.0.22
+ * Version:           2.0.23
  * Author:            Inkfire
  * Author URI:        https://inkfire.co.uk/
  * Text Domain:       inkfire-login-styler
@@ -200,8 +200,8 @@ class IFLS_Asset_Manager {
         $css_path = plugin_dir_path(__FILE__) . 'assets/inkfire-login.css';
         $js_path  = plugin_dir_path(__FILE__) . 'assets/inkfire-login.js';
         
-        $css_ver = file_exists($css_path) ? filemtime($css_path) : '2.0.21';
-        $js_ver  = file_exists($js_path) ? filemtime($js_path) : '2.0.21';
+        $css_ver = file_exists($css_path) ? filemtime($css_path) : '2.0.23';
+        $js_ver  = file_exists($js_path) ? filemtime($js_path) : '2.0.23';
         
         wp_enqueue_style('inkfire-login', self::get_asset_url('css'), [], $css_ver);
         
@@ -276,6 +276,69 @@ function ifls_sanitize_request($key) {
     return sanitize_text_field(wp_unslash($_REQUEST[$key]));
 }
 
+function ifls_wrap_notice_markup($html, $type = 'info', $id = '') {
+    if ($html === '') return '';
+    $classes = $type === 'error' ? 'error' : 'message info';
+    $id_attr = $id !== '' ? ' id="' . esc_attr($id) . '"' : '';
+    return '<div' . $id_attr . ' class="' . esc_attr($classes) . '">' . $html . '</div>';
+}
+
+function ifls_get_login_notice_html() {
+    global $error, $errors;
+
+    $legacy_notice_html = '';
+    if (function_exists('login_messages')) {
+        $legacy_notice_html .= (string) login_messages();
+    }
+    if (function_exists('login_errors')) {
+        $legacy_notice_html .= (string) login_errors();
+    }
+    if ($legacy_notice_html !== '') {
+        return $legacy_notice_html;
+    }
+
+    $wp_error = is_wp_error($errors) ? $errors : new WP_Error();
+
+    if (!empty($error)) {
+        $wp_error->add('error', $error);
+    }
+
+    if (!$wp_error->has_errors()) {
+        return '';
+    }
+
+    $error_list = [];
+    $message_html = '';
+
+    foreach ($wp_error->get_error_codes() as $code) {
+        $severity = $wp_error->get_error_data($code);
+        foreach ($wp_error->get_error_messages($code) as $error_message) {
+            if ($severity === 'message') {
+                $message_html .= '<p>' . $error_message . '</p>';
+            } else {
+                $error_list[] = $error_message;
+            }
+        }
+    }
+
+    $notice_html = '';
+
+    if (!empty($error_list)) {
+        $error_html = count($error_list) > 1
+            ? '<ul class="login-error-list"><li>' . implode('</li><li>', $error_list) . '</li></ul>'
+            : '<p>' . $error_list[0] . '</p>';
+        $error_html = apply_filters('login_errors', $error_html);
+        $notice_html .= ifls_wrap_notice_markup($error_html, 'error', 'login_error');
+    }
+
+    if ($message_html !== '') {
+        $message_html = apply_filters('login_messages', $message_html);
+        $notice_html .= ifls_wrap_notice_markup($message_html, 'info', 'login-message');
+    }
+
+    return $notice_html;
+}
+
 function ifls_render_inline_form($action) {
     $action = $action === '' ? 'login' : $action;
     
@@ -301,11 +364,7 @@ function ifls_render_inline_form($action) {
             $form_html
         );
         $heading = '<h2 class="if-card-title">' . esc_html(ifls_heading_text(__('Sign in to', 'inkfire-login-styler'))) . '</h2>';
-        $message = '';
-        if (ifls_sanitize_request('loggedout') === 'true') $message = '<p class="message info">' . __('You are now logged out.', 'inkfire-login-styler') . '</p>';
-        elseif (ifls_sanitize_request('registration') === 'disabled') $message = '<p class="error">' . __('Registration is disabled.', 'inkfire-login-styler') . '</p>';
-        $message .= login_messages();
-        $message .= login_errors();
+        $message = ifls_get_login_notice_html();
         return $heading . $message . $form_html;
     }
     
@@ -474,7 +533,7 @@ function ifls_render_login_layout() {
 }
 
 function ifls_plugin_row_meta($links, $file) {
-    if (plugin_basename(__FILE__) === $file) $links[] = '<strong>Enterprise Gold v2.0.21</strong>';
+    if (plugin_basename(__FILE__) === $file) $links[] = '<strong>Enterprise Gold v2.0.23</strong>';
     return $links;
 }
 
@@ -514,12 +573,12 @@ add_action('admin_head', 'ifls_add_plugin_icon');
 
 add_action('admin_enqueue_scripts', function() {
     $css_path = plugin_dir_path(__FILE__) . 'assets/inkfire-login.css';
-    $css_ver = file_exists($css_path) ? filemtime($css_path) : '2.0.21';
+    $css_ver = file_exists($css_path) ? filemtime($css_path) : '2.0.23';
     wp_enqueue_style('inkfire-login', plugins_url('assets/inkfire-login.css', __FILE__), [], $css_ver);
     wp_add_inline_style('inkfire-login', IFLS_Asset_Manager::generate_css_variables());
 });
 
-register_activation_hook(__FILE__, function() { add_option('ifls_installed_version', '2.0.21'); });
+register_activation_hook(__FILE__, function() { add_option('ifls_installed_version', '2.0.23'); });
 
 add_filter('login_headerurl', 'ifls_login_header_url');
 add_filter('login_headertext', 'ifls_login_header_text');

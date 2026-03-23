@@ -2,8 +2,8 @@
 Contributors: Inkfire
 Tags: login, branding, security, custom login
 Requires at least: 6.0
-Tested up to: 6.6
-Stable tag: 2.0.22
+Tested up to: 6.9
+Stable tag: 2.0.23
 Requires PHP: 7.4
 License: GPLv2 or later
 
@@ -42,6 +42,12 @@ The plugin includes a self-hosted updater. When a new release is available on Gi
 This is a "Gold Master" plugin with hardcoded branding to ensure consistency across all client sites. To change branding, you must modify the assets/ folder and inkfire-login-styler.php in the source code.
 
 == Changelog ==
+
+= 2.0.23 =
+
+Fix: Replace removed `login_messages()` and `login_errors()` calls with a WordPress 6.9-compatible notice renderer so the branded login page no longer fatals.
+
+Fix: Keep native login info and error notices visible inside the custom login card on current WordPress releases.
 
 = 2.0.22 =
 
