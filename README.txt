@@ -3,7 +3,7 @@ Contributors: Inkfire
 Tags: login, branding, security, custom login
 Requires at least: 6.0
 Tested up to: 6.9
-Stable tag: 2.0.23
+Stable tag: 2.0.24
 Requires PHP: 7.4
 License: GPLv2 or later
 
@@ -43,7 +43,7 @@ This is a "Gold Master" plugin with hardcoded branding to ensure consistency acr
 
 == Changelog ==
 
-= 2.0.23 =
+= 2.0.24 =
 
 Fix: Replace removed `login_messages()` and `login_errors()` calls with a WordPress 6.9-compatible notice renderer so the branded login page no longer fatals.
 
