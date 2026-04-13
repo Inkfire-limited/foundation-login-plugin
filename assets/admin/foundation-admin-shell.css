@@ -1,0 +1,589 @@
+.foundation-admin-wrap {
+  margin-top: 18px;
+}
+
+.foundation-app-root {
+  --foundation-bg: #eef3fb;
+  --foundation-surface: rgba(255, 255, 255, 0.92);
+  --foundation-surface-strong: #ffffff;
+  --foundation-panel: rgba(248, 251, 255, 0.96);
+  --foundation-border: rgba(15, 23, 42, 0.1);
+  --foundation-border-strong: rgba(15, 23, 42, 0.16);
+  --foundation-ink: #101827;
+  --foundation-muted: #526075;
+  --foundation-brand: #0f766e;
+  --foundation-brand-strong: #0e9386;
+  --foundation-accent: #d6336c;
+  --foundation-shadow: 0 24px 56px rgba(15, 23, 42, 0.12);
+  --foundation-input: #ffffff;
+  --foundation-soft: rgba(15, 118, 110, 0.08);
+  color: var(--foundation-ink);
+  font-family: "Aptos", "Avenir Next", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  max-width: 1380px;
+}
+
+.foundation-app-root.is-dark {
+  --foundation-bg: #0c1220;
+  --foundation-surface: rgba(19, 26, 39, 0.96);
+  --foundation-surface-strong: #131a27;
+  --foundation-panel: rgba(22, 31, 46, 0.98);
+  --foundation-border: rgba(226, 232, 240, 0.1);
+  --foundation-border-strong: rgba(226, 232, 240, 0.18);
+  --foundation-ink: #f8fafc;
+  --foundation-muted: #b5c0cf;
+  --foundation-brand: #2dd4bf;
+  --foundation-brand-strong: #14b8a6;
+  --foundation-accent: #f472b6;
+  --foundation-shadow: 0 28px 68px rgba(0, 0, 0, 0.36);
+  --foundation-input: #0f1724;
+  --foundation-soft: rgba(45, 212, 191, 0.12);
+}
+
+.foundation-app-root *,
+.foundation-app-root *::before,
+.foundation-app-root *::after {
+  box-sizing: border-box;
+}
+
+.foundation-shell-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.95fr);
+  gap: 18px;
+  padding: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at top right, rgba(214, 51, 108, 0.22), transparent 34%),
+    radial-gradient(circle at 18% 16%, rgba(15, 118, 110, 0.18), transparent 24%),
+    linear-gradient(140deg, #101828 0%, #121d2d 44%, #18324b 82%, #122a26 100%);
+  box-shadow: 0 28px 72px rgba(15, 23, 42, 0.22);
+}
+
+.foundation-shell-hero__toolbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.foundation-shell-eyebrow,
+.foundation-shell-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.foundation-shell-kicker {
+  margin-bottom: 10px;
+  background: var(--foundation-soft);
+  color: var(--foundation-brand);
+}
+
+.foundation-shell-title {
+  margin: 0;
+  color: #ffffff;
+  font-size: clamp(2rem, 3.6vw, 3rem);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+}
+
+.foundation-shell-description {
+  max-width: 760px;
+  margin: 14px 0 0;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+.foundation-shell-badge {
+  display: inline-flex;
+  margin-top: 16px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.foundation-shell-actions,
+.foundation-shell-metrics,
+.foundation-shell-nav,
+.foundation-admin-rich .fd-flow-toolbar,
+.foundation-admin-rich .fd-faq-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.foundation-shell-actions {
+  margin-top: 18px;
+}
+
+.foundation-shell-button,
+.foundation-shell-theme,
+.foundation-nav-button,
+.foundation-admin-rich .fd-btn,
+.foundation-admin-rich .button,
+.foundation-admin-rich .button-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 10px 16px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: transform 140ms ease, border-color 140ms ease, background-color 140ms ease, color 140ms ease, box-shadow 140ms ease;
+}
+
+.foundation-shell-button:hover,
+.foundation-shell-theme:hover,
+.foundation-nav-button:hover,
+.foundation-admin-rich .fd-btn:hover,
+.foundation-admin-rich .button:hover,
+.foundation-admin-rich .button-primary:hover {
+  transform: translateY(-1px);
+}
+
+.foundation-shell-button.is-solid,
+.foundation-admin-rich .button-primary,
+.foundation-admin-rich .fd-btn--add {
+  background: linear-gradient(135deg, var(--foundation-brand-strong), var(--foundation-brand));
+  border-color: transparent;
+  color: #ffffff;
+  box-shadow: 0 14px 28px rgba(15, 118, 110, 0.24);
+}
+
+.foundation-shell-button.is-ghost,
+.foundation-shell-theme,
+.foundation-nav-button,
+.foundation-admin-rich .button,
+.foundation-admin-rich .fd-btn,
+.foundation-admin-rich .fd-btn--ghost {
+  background: var(--foundation-surface-strong);
+  border-color: var(--foundation-border-strong);
+  color: var(--foundation-ink);
+}
+
+.foundation-admin-rich .fd-btn--del {
+  background: rgba(220, 38, 38, 0.08);
+  border-color: rgba(220, 38, 38, 0.2);
+  color: #b91c1c;
+}
+
+.foundation-shell-theme,
+.foundation-nav-button {
+  min-height: 40px;
+  border-radius: 999px;
+}
+
+.foundation-shell-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.foundation-metric-card,
+.foundation-shell-panel,
+.foundation-admin-rich .fp-card,
+.foundation-admin-rich .fd-step,
+.foundation-admin-rich .fd-faq {
+  border: 1px solid var(--foundation-border);
+  border-radius: 24px;
+  background: var(--foundation-surface);
+  box-shadow: var(--foundation-shadow);
+  backdrop-filter: blur(10px);
+}
+
+.foundation-metric-card {
+  padding: 18px;
+}
+
+.foundation-metric-label {
+  display: block;
+  color: var(--foundation-muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.foundation-metric-value {
+  display: block;
+  margin-top: 6px;
+  color: var(--foundation-ink);
+  font-size: 1.6rem;
+  font-weight: 800;
+}
+
+.foundation-metric-meta {
+  margin: 10px 0 0;
+  color: var(--foundation-muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.foundation-metric-card.is-danger .foundation-metric-value {
+  color: #d6336c;
+}
+
+.foundation-metric-card.is-accent .foundation-metric-value {
+  color: var(--foundation-brand);
+}
+
+.foundation-shell-nav {
+  margin: 18px 0;
+}
+
+.foundation-shell-sections {
+  display: grid;
+  gap: 18px;
+}
+
+.foundation-shell-panel {
+  padding: 24px;
+}
+
+.foundation-shell-section__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.foundation-shell-section__title {
+  margin: 0;
+  color: var(--foundation-ink);
+  font-size: 1.5rem;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+}
+
+.foundation-shell-section__description {
+  max-width: 620px;
+  margin: 0;
+  color: var(--foundation-muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.foundation-admin-rich {
+  color: var(--foundation-ink);
+}
+
+.foundation-admin-rich .fp-card {
+  margin: 0;
+  padding: 22px;
+  background: var(--foundation-panel);
+}
+
+.foundation-admin-rich .fp-card + .fp-card {
+  margin-top: 16px;
+}
+
+.foundation-admin-rich .fp-card-title,
+.foundation-admin-rich .fp-card h2 {
+  margin: 0 0 14px;
+  color: var(--foundation-ink);
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.foundation-admin-rich .fp-card p,
+.foundation-admin-rich .description,
+.foundation-admin-rich .fd-help,
+.foundation-admin-rich .fd-subtle,
+.foundation-admin-rich .fd-bridge-note,
+.foundation-admin-rich .fd-help-mini {
+  color: var(--foundation-muted);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.foundation-admin-rich .foundation-admin-list {
+  display: grid;
+  gap: 12px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.foundation-admin-rich .foundation-admin-list li {
+  padding: 16px;
+  border: 1px solid var(--foundation-border);
+  border-radius: 18px;
+  background: var(--foundation-surface-strong);
+}
+
+.foundation-admin-rich .foundation-admin-list strong {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--foundation-ink);
+}
+
+.foundation-admin-rich .fp-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.foundation-admin-rich .fp-stat-box {
+  padding: 14px;
+  border: 1px solid var(--foundation-border);
+  border-radius: 18px;
+  background: var(--foundation-surface-strong);
+}
+
+.foundation-admin-rich .fp-stat-value {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--foundation-ink);
+}
+
+.foundation-admin-rich .fp-stat-broken {
+  color: #d6336c;
+}
+
+.foundation-admin-rich .fp-stat-a11y {
+  color: var(--foundation-brand);
+}
+
+.foundation-admin-rich .form-table,
+.foundation-admin-rich .widefat,
+.foundation-admin-rich .wp-list-table {
+  width: 100%;
+}
+
+.foundation-admin-rich .form-table th,
+.foundation-admin-rich .form-table td {
+  padding: 14px 12px 14px 0;
+  border-bottom: 1px solid var(--foundation-border);
+  vertical-align: top;
+}
+
+.foundation-admin-rich .form-table th {
+  width: 240px;
+  color: var(--foundation-ink);
+  font-weight: 700;
+}
+
+.foundation-admin-rich input[type="text"],
+.foundation-admin-rich input[type="search"],
+.foundation-admin-rich input[type="password"],
+.foundation-admin-rich input[type="url"],
+.foundation-admin-rich input[type="email"],
+.foundation-admin-rich input[type="number"],
+.foundation-admin-rich textarea,
+.foundation-admin-rich select {
+  width: 100%;
+  max-width: 860px;
+  padding: 12px 14px;
+  border: 1px solid var(--foundation-border-strong);
+  border-radius: 14px;
+  background: var(--foundation-input);
+  color: var(--foundation-ink);
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.foundation-admin-rich textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.foundation-admin-rich input:focus,
+.foundation-admin-rich textarea:focus,
+.foundation-admin-rich select:focus,
+.foundation-shell-button:focus-visible,
+.foundation-shell-theme:focus-visible,
+.foundation-nav-button:focus-visible,
+.foundation-admin-rich .button:focus-visible,
+.foundation-admin-rich .fd-btn:focus-visible {
+  outline: none;
+  border-color: rgba(15, 118, 110, 0.48);
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.18);
+}
+
+.foundation-admin-rich .widefat,
+.foundation-admin-rich .wp-list-table {
+  border: 1px solid var(--foundation-border);
+  border-radius: 18px;
+  overflow: hidden;
+  background: var(--foundation-surface-strong);
+}
+
+.foundation-admin-rich .widefat thead th,
+.foundation-admin-rich .widefat tfoot th,
+.foundation-admin-rich .wp-list-table thead th,
+.foundation-admin-rich .wp-list-table tfoot th {
+  background: var(--foundation-panel);
+  color: var(--foundation-muted);
+  font-weight: 700;
+}
+
+.foundation-admin-rich .widefat td,
+.foundation-admin-rich .widefat th,
+.foundation-admin-rich .wp-list-table td,
+.foundation-admin-rich .wp-list-table th {
+  padding: 14px 12px;
+  border-bottom: 1px solid var(--foundation-border);
+}
+
+.foundation-admin-rich .tablenav {
+  margin: 0 0 12px;
+}
+
+.foundation-admin-rich .fd-step,
+.foundation-admin-rich .fd-faq {
+  padding: 18px;
+  background: var(--foundation-panel);
+}
+
+.foundation-admin-rich .fd-row {
+  display: grid;
+  gap: 12px;
+  align-items: center;
+  margin: 10px 0;
+}
+
+.foundation-admin-rich .fd-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.foundation-admin-rich .fp-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.foundation-admin-rich .fp-switch input {
+  position: absolute !important;
+  opacity: 0 !important;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  pointer-events: none;
+}
+
+.foundation-admin-rich .fp-toggle-slider {
+  position: relative;
+  width: 46px;
+  height: 26px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.5);
+}
+
+.foundation-admin-rich .fp-toggle-slider::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow: 0 2px 5px rgba(15, 23, 42, 0.2);
+  transition: transform 160ms ease;
+}
+
+.foundation-admin-rich .fp-switch input:checked + .fp-toggle-slider {
+  background: var(--foundation-brand);
+}
+
+.foundation-admin-rich .fp-switch input:checked + .fp-toggle-slider::after {
+  transform: translateX(20px);
+}
+
+.foundation-admin-rich .fp-scan-progress-bar-container {
+  width: 100%;
+  margin-top: 12px;
+}
+
+.foundation-admin-rich .fp-scan-progress-bar,
+.foundation-admin-rich #fnd-rag-bar {
+  height: 12px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(148, 163, 184, 0.22);
+}
+
+.foundation-admin-rich .fp-scan-progress-bar > span,
+.foundation-admin-rich #fnd-rag-bar-fill,
+.foundation-admin-rich #fp-scan-progress-bar {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(135deg, var(--foundation-accent), var(--foundation-brand));
+  transition: width 180ms ease;
+}
+
+.foundation-admin-rich code {
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.08);
+  color: var(--foundation-ink);
+}
+
+.foundation-app-root.is-dark .foundation-admin-rich code {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+@media (max-width: 1140px) {
+  .foundation-shell-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .foundation-shell-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 782px) {
+  .foundation-shell-hero,
+  .foundation-shell-panel,
+  .foundation-admin-rich .fp-card,
+  .foundation-admin-rich .fd-step,
+  .foundation-admin-rich .fd-faq {
+    padding: 20px;
+    border-radius: 22px;
+  }
+
+  .foundation-shell-hero__toolbar,
+  .foundation-shell-section__header {
+    flex-direction: column;
+  }
+
+  .foundation-shell-metrics,
+  .foundation-admin-rich .fp-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .foundation-admin-rich .form-table th,
+  .foundation-admin-rich .form-table td {
+    display: block;
+    width: 100%;
+    padding-right: 0;
+  }
+}

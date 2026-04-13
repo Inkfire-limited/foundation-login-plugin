@@ -3,7 +3,7 @@
  * Plugin Name:       Foundation - Inkfire Login
  * Plugin URI:        https://github.com/hawks010/foundation-login-plugin/
  * Description:       Enterprise-grade login customizer. Secure, responsive, and branded.
- * Version:           2.0.24
+ * Version:           2.0.25
  * Author:            Sonny x Inkfire
  * Author URI:        https://inkfire.co.uk/
  * Text Domain:       inkfire-login-styler
@@ -23,6 +23,7 @@ if (!defined('ABSPATH')) {
 if (!defined('INKFIRE_LOGIN_BG'))   define('INKFIRE_LOGIN_BG',   plugins_url('assets/inkfire_background.png', __FILE__));
 if (!defined('INKFIRE_LOGIN_LOGO')) define('INKFIRE_LOGIN_LOGO', plugins_url('assets/inkfire_logo.png', __FILE__));
 if (!defined('INKFIRE_LOGIN_ICON')) define('INKFIRE_LOGIN_ICON', plugins_url('assets/inkfire_icon.png', __FILE__));
+if (!defined('IFLS_VERSION'))       define('IFLS_VERSION',       '2.0.25');
 
 // Brand colors
 if (!defined('IF_TEAL'))   define('IF_TEAL',   '#32797e');
@@ -200,8 +201,8 @@ class IFLS_Asset_Manager {
         $css_path = plugin_dir_path(__FILE__) . 'assets/inkfire-login.css';
         $js_path  = plugin_dir_path(__FILE__) . 'assets/inkfire-login.js';
         
-        $css_ver = file_exists($css_path) ? filemtime($css_path) : '2.0.24';
-        $js_ver  = file_exists($js_path) ? filemtime($js_path) : '2.0.24';
+        $css_ver = file_exists($css_path) ? filemtime($css_path) : IFLS_VERSION;
+        $js_ver  = file_exists($js_path) ? filemtime($js_path) : IFLS_VERSION;
         
         wp_enqueue_style('inkfire-login', self::get_asset_url('css'), [], $css_ver);
         
@@ -533,8 +534,139 @@ function ifls_render_login_layout() {
 }
 
 function ifls_plugin_row_meta($links, $file) {
-    if (plugin_basename(__FILE__) === $file) $links[] = '<strong>Enterprise Gold v2.0.24</strong>';
+    if (plugin_basename(__FILE__) === $file) $links[] = '<strong>Enterprise Gold v' . esc_html(IFLS_VERSION) . '</strong>';
     return $links;
+}
+
+/* ==========================================================================
+   Foundation Admin Shell
+   ========================================================================== */
+
+function ifls_get_admin_shell_config() {
+    return [
+        'plugin' => 'login-styler',
+        'rootId' => 'foundation-admin-app',
+        'eyebrow' => __('Foundation command centre', 'inkfire-login-styler'),
+        'title' => __('Foundation: Inkfire Login', 'inkfire-login-styler'),
+        'description' => __('This read-only dashboard brings the login styler into the shared Foundation admin pattern without changing the hardened login runtime.', 'inkfire-login-styler'),
+        'badge' => 'v' . IFLS_VERSION,
+        'themeStorageKey' => 'foundation-login-styler-theme',
+        'actions' => [
+            [
+                'label' => __('Open login page', 'inkfire-login-styler'),
+                'href' => wp_login_url(),
+                'target' => '_blank',
+                'variant' => 'solid',
+            ],
+            [
+                'label' => __('GitHub backup', 'inkfire-login-styler'),
+                'href' => 'https://github.com/hawks010/foundation-login-plugin',
+                'target' => '_blank',
+                'variant' => 'ghost',
+            ],
+        ],
+        'metrics' => [
+            [
+                'label' => __('Plugin status', 'inkfire-login-styler'),
+                'value' => __('Active', 'inkfire-login-styler'),
+                'meta' => sprintf(__('Running version %s.', 'inkfire-login-styler'), IFLS_VERSION),
+            ],
+            [
+                'label' => __('Lockout policy', 'inkfire-login-styler'),
+                'value' => sprintf(__('%d tries', 'inkfire-login-styler'), IFLS_MAX_LOGIN_ATTEMPTS),
+                'meta' => sprintf(__('Lockout lasts %d minutes.', 'inkfire-login-styler'), (int) (IFLS_LOCKOUT_TIME / 60)),
+            ],
+            [
+                'label' => __('Brand mode', 'inkfire-login-styler'),
+                'value' => __('Gold master', 'inkfire-login-styler'),
+                'meta' => __('Brand assets remain intentionally code-controlled.', 'inkfire-login-styler'),
+                'tone' => 'accent',
+            ],
+        ],
+        'sections' => [
+            [
+                'id' => 'login-styler-status',
+                'navLabel' => __('Status', 'inkfire-login-styler'),
+                'eyebrow' => __('Read-only dashboard', 'inkfire-login-styler'),
+                'title' => __('Login runtime status', 'inkfire-login-styler'),
+                'description' => __('There are no settings to migrate here. The shell gives the plugin a Foundation admin home while the login screen stays zero-configuration.', 'inkfire-login-styler'),
+                'templateId' => 'foundation-login-styler-status',
+            ],
+        ],
+    ];
+}
+
+function ifls_register_foundation_admin_menu() {
+    global $admin_page_hooks;
+
+    $parent_slug = 'foundation-by-inkfire';
+
+    if (empty($admin_page_hooks[$parent_slug])) {
+        add_menu_page(
+            __('Foundation', 'inkfire-login-styler'),
+            __('Foundation', 'inkfire-login-styler'),
+            'manage_options',
+            $parent_slug,
+            'ifls_render_admin_page',
+            'dashicons-hammer',
+            30
+        );
+    }
+
+    add_submenu_page(
+        $parent_slug,
+        __('Inkfire Login', 'inkfire-login-styler'),
+        __('Inkfire Login', 'inkfire-login-styler'),
+        'manage_options',
+        'foundation-login-styler',
+        'ifls_render_admin_page'
+    );
+
+    remove_submenu_page($parent_slug, $parent_slug);
+}
+add_action('admin_menu', 'ifls_register_foundation_admin_menu', 20);
+
+function ifls_enqueue_admin_shell($hook) {
+    if (false === strpos((string) $hook, 'foundation-login-styler')) {
+        return;
+    }
+
+    $asset_base = plugin_dir_url(__FILE__) . 'assets/admin/';
+    wp_enqueue_style('foundation-admin-shell', $asset_base . 'foundation-admin-shell.css', [], IFLS_VERSION);
+    wp_enqueue_script('foundation-admin-shell', $asset_base . 'foundation-admin-shell.js', ['wp-element'], IFLS_VERSION, true);
+    wp_add_inline_script(
+        'foundation-admin-shell',
+        'window.foundationAdminShellData = ' . wp_json_encode(ifls_get_admin_shell_config()) . ';',
+        'before'
+    );
+}
+add_action('admin_enqueue_scripts', 'ifls_enqueue_admin_shell');
+
+function ifls_render_admin_page() {
+    if (!current_user_can('manage_options')) {
+        wp_die(__('You do not have permission to access this page.', 'inkfire-login-styler'));
+    }
+
+    ob_start();
+    ?>
+    <div class="fp-card">
+        <h2><?php esc_html_e('Login styling is active', 'inkfire-login-styler'); ?></h2>
+        <p class="description"><?php esc_html_e('This plugin intentionally remains zero-configuration. Branding, CSRF protection, brute-force lockouts, and WordPress login notice compatibility continue to run from the existing login hooks.', 'inkfire-login-styler'); ?></p>
+        <div class="foundation-shell-actions">
+            <a class="button button-primary" href="<?php echo esc_url(wp_login_url()); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Preview login page', 'inkfire-login-styler'); ?></a>
+            <a class="button" href="<?php echo esc_url(admin_url('plugins.php')); ?>"><?php esc_html_e('Open plugins screen', 'inkfire-login-styler'); ?></a>
+        </div>
+    </div>
+    <?php
+    $status_markup = ob_get_clean();
+    ?>
+    <div class="wrap foundation-admin-wrap">
+        <div id="foundation-admin-app">
+            <p><?php esc_html_e('Loading Foundation shell...', 'inkfire-login-styler'); ?></p>
+        </div>
+        <template id="foundation-login-styler-status"><?php echo $status_markup; ?></template>
+    </div>
+    <?php
 }
 
 /**
@@ -573,12 +705,12 @@ add_action('admin_head', 'ifls_add_plugin_icon');
 
 add_action('admin_enqueue_scripts', function() {
     $css_path = plugin_dir_path(__FILE__) . 'assets/inkfire-login.css';
-    $css_ver = file_exists($css_path) ? filemtime($css_path) : '2.0.24';
+    $css_ver = file_exists($css_path) ? filemtime($css_path) : IFLS_VERSION;
     wp_enqueue_style('inkfire-login', plugins_url('assets/inkfire-login.css', __FILE__), [], $css_ver);
     wp_add_inline_style('inkfire-login', IFLS_Asset_Manager::generate_css_variables());
 });
 
-register_activation_hook(__FILE__, function() { add_option('ifls_installed_version', '2.0.24'); });
+register_activation_hook(__FILE__, function() { add_option('ifls_installed_version', IFLS_VERSION); });
 
 add_filter('login_headerurl', 'ifls_login_header_url');
 add_filter('login_headertext', 'ifls_login_header_text');
