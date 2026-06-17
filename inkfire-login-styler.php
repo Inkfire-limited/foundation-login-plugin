@@ -3,7 +3,7 @@
  * Plugin Name:       Foundation - Inkfire Login
  * Plugin URI:        https://github.com/hawks010/foundation-login-plugin/
  * Description:       Enterprise-grade login customizer. Secure, responsive, and branded.
- * Version:           2.0.25
+ * Version:           2.0.26
  * Author:            Sonny x Inkfire
  * Author URI:        https://inkfire.co.uk/
  * Text Domain:       inkfire-login-styler
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 if (!defined('INKFIRE_LOGIN_BG'))   define('INKFIRE_LOGIN_BG',   plugins_url('assets/inkfire_background.png', __FILE__));
 if (!defined('INKFIRE_LOGIN_LOGO')) define('INKFIRE_LOGIN_LOGO', plugins_url('assets/inkfire_logo.png', __FILE__));
 if (!defined('INKFIRE_LOGIN_ICON')) define('INKFIRE_LOGIN_ICON', plugins_url('assets/inkfire_icon.png', __FILE__));
-if (!defined('IFLS_VERSION'))       define('IFLS_VERSION',       '2.0.25');
+if (!defined('IFLS_VERSION'))       define('IFLS_VERSION',       '2.0.26');
 
 // Brand colors
 if (!defined('IF_TEAL'))   define('IF_TEAL',   '#32797e');
@@ -121,23 +121,64 @@ class IFLS_Enterprise_Security {
         }, 10, 3);
     }
 
-    private function get_client_ip() {
-        $keys = ['HTTP_CLIENT_IP', 'HTTP_X_FORWARDED_FOR', 'REMOTE_ADDR'];
-        foreach ($keys as $key) {
-            if (isset($_SERVER[$key])) {
-                $ip = filter_var($_SERVER[$key], FILTER_VALIDATE_IP);
-                if ($ip) return $ip;
+    private function parse_forwarded_ip_header($value) {
+        if (!is_string($value) || '' === $value) {
+            return '';
+        }
+
+        foreach (explode(',', $value) as $candidate) {
+            $candidate = trim($candidate);
+            if (filter_var($candidate, FILTER_VALIDATE_IP)) {
+                return $candidate;
             }
         }
+
+        return '';
+    }
+
+    private function get_client_ip() {
+        $remote_addr = isset($_SERVER['REMOTE_ADDR']) ? trim((string) wp_unslash($_SERVER['REMOTE_ADDR'])) : '';
+        if (filter_var($remote_addr, FILTER_VALIDATE_IP)) {
+            return $remote_addr;
+        }
+
+        foreach (['HTTP_CF_CONNECTING_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_CLIENT_IP'] as $key) {
+            if (!isset($_SERVER[$key])) {
+                continue;
+            }
+
+            $ip = $this->parse_forwarded_ip_header((string) wp_unslash($_SERVER[$key]));
+            if ($ip) {
+                return $ip;
+            }
+        }
+
         return '0.0.0.0';
+    }
+
+    private function get_lockout_key($username) {
+        return $this->transient_prefix . md5((string) $username . $this->get_client_ip());
+    }
+
+    private function get_lockout_expiry_key($username) {
+        return $this->get_lockout_key($username) . '_expires';
+    }
+
+    private function get_lockout_time_left($username) {
+        $expires_at = (int) get_transient($this->get_lockout_expiry_key($username));
+        if ($expires_at > time()) {
+            return $expires_at - time();
+        }
+
+        return IFLS_LOCKOUT_TIME;
     }
     
     public function check_login_attempts($user, $username, $password) {
         if (empty($username)) return $user;
-        $key = $this->transient_prefix . md5($username . $this->get_client_ip());
+        $key = $this->get_lockout_key($username);
         $attempts = get_transient($key) ?: 0;
         if ($attempts >= IFLS_MAX_LOGIN_ATTEMPTS) {
-            $time_left = get_option("_transient_timeout_{$key}") - time();
+            $time_left = max(1, $this->get_lockout_time_left($username));
             return new WP_Error('too_many_attempts', sprintf(__('Too many failed attempts. Try again in %d minutes.', 'inkfire-login-styler'), ceil($time_left / 60)));
         }
         return $user;
@@ -145,14 +186,21 @@ class IFLS_Enterprise_Security {
     
     public function log_failed_attempt($username) {
         if (empty($username)) return;
-        $key = $this->transient_prefix . md5($username . $this->get_client_ip());
-        $attempts = get_transient($key) ?: 0;
-        set_transient($key, $attempts + 1, IFLS_LOCKOUT_TIME);
+        $key = $this->get_lockout_key($username);
+        $attempts = (int) (get_transient($key) ?: 0);
+        $attempts++;
+
+        set_transient($key, $attempts, IFLS_LOCKOUT_TIME);
+
+        if ($attempts >= IFLS_MAX_LOGIN_ATTEMPTS) {
+            set_transient($this->get_lockout_expiry_key($username), time() + IFLS_LOCKOUT_TIME, IFLS_LOCKOUT_TIME);
+        }
     }
     
     public function clear_attempts_on_success($username) {
-        $key = $this->transient_prefix . md5($username . $this->get_client_ip());
+        $key = $this->get_lockout_key($username);
         delete_transient($key);
+        delete_transient($this->get_lockout_expiry_key($username));
     }
     
     public function add_csrf_tokens() { wp_nonce_field('ifls_form_action', 'ifls_form_nonce'); }
@@ -522,9 +570,9 @@ function ifls_render_login_layout() {
                 </section>
             </main>
             <aside class="if-left" role="complementary">
-                <div class="if-left-block"><img class="if-icon" src="<?php echo esc_url(INKFIRE_LOGIN_ICON); ?>" alt="" /><h3>Stay in touch</h3><p><a class="if-accent" href="mailto:hello@inkfire.co.uk">hello@inkfire.co.uk</a><br><a class="if-accent" href="tel:+443336134653">+44 (0)333 613 4653</a><br><a class="if-accent" href="https://inkfire.co.uk/" target="_blank">inkfire.co.uk</a></p></div>
+                <div class="if-left-block"><img class="if-icon" src="<?php echo esc_url(INKFIRE_LOGIN_ICON); ?>" alt="" /><h3>Stay in touch</h3><p><a class="if-accent" href="mailto:hello@inkfire.co.uk">hello@inkfire.co.uk</a><br><a class="if-accent" href="tel:+443336134653">+44 (0)333 613 4653</a><br><a class="if-accent" href="https://inkfire.co.uk/" target="_blank" rel="noopener noreferrer">inkfire.co.uk</a></p></div>
                 <div class="if-left-block"><h4>Opening Times</h4><p>Monday – Friday<br><strong>9am – 5pm GMT</strong></p></div>
-                <div class="if-left-block"><h4>Follow Us</h4><div class="if-socials"><a href="https://facebook.com/inkfirelimited" target="_blank"><i class="fa-brands fa-facebook-f"></i></a><a href="https://www.instagram.com/inkfirelimited/" target="_blank"><i class="fa-brands fa-instagram"></i></a><a href="https://uk.linkedin.com/company/inkfire" target="_blank"><i class="fa-brands fa-linkedin-in"></i></a><a href="https://twitter.com/Inkfirelimited" target="_blank"><i class="fa-brands fa-x-twitter"></i></a><a href="https://www.tiktok.com/@inkfirelimited" target="_blank"><i class="fa-brands fa-tiktok"></i></a></div></div>
+                <div class="if-left-block"><h4>Follow Us</h4><div class="if-socials"><a href="https://facebook.com/inkfirelimited" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-facebook-f"></i></a><a href="https://www.instagram.com/inkfirelimited/" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-instagram"></i></a><a href="https://uk.linkedin.com/company/inkfire" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-linkedin-in"></i></a><a href="https://twitter.com/Inkfirelimited" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-x-twitter"></i></a><a href="https://www.tiktok.com/@inkfirelimited" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-tiktok"></i></a></div></div>
                 <div class="if-left-block if-legal"><p class="if-legal-small">Company Number: 15153305<br>VAT Number: GB483189752</p></div>
                 <?php if ($lang_selector) : ?><div class="if-left-block if-lang-left"><?php echo $lang_selector; ?></div><?php endif; ?>
             </aside>

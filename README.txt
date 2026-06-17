@@ -3,7 +3,7 @@ Contributors: Inkfire
 Tags: login, branding, security, custom login
 Requires at least: 6.0
 Tested up to: 6.9
-Stable tag: 2.0.25
+Stable tag: 2.0.26
 Requires PHP: 7.4
 License: GPLv2 or later
 
@@ -43,6 +43,13 @@ This is a "Gold Master" plugin with hardcoded branding to ensure consistency acr
 
 == Changelog ==
 
+= 2.0.26 =
+
+Fix: Lock login throttling to the resolved remote address by default instead of trusting spoofable forwarded headers first.
+
+Fix: Persist the lockout expiry in plugin-managed transients so countdown messages stay sane on sites using persistent object caches.
+
+Fix: Add `rel="noopener noreferrer"` to public login-screen outbound links opened in a new tab.
 = 2.0.25 =
 
 New: Added a read-only shared Foundation shell dashboard while preserving the login styling and security runtime.
