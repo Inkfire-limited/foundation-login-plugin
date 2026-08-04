@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name:       Foundation - Inkfire Login
- * Plugin URI:        https://github.com/hawks010/foundation-login-plugin/
+ * Plugin URI:        https://github.com/Inkfire-limited/foundation-login-plugin/
  * Description:       Enterprise-grade login customizer. Secure, responsive, and branded.
  * Version:           2.0.26
  * Author:            Sonny x Inkfire
@@ -9,7 +9,7 @@
  * Text Domain:       inkfire-login-styler
  * Requires PHP:      7.4
  * Requires at least: 6.0
- * Update URI:        https://github.com/hawks010/foundation-login-plugin/
+ * Update URI:        https://github.com/Inkfire-limited/foundation-login-plugin/
  */
 
 if (!defined('ABSPATH')) {
@@ -608,7 +608,7 @@ function ifls_get_admin_shell_config() {
             ],
             [
                 'label' => __('GitHub backup', 'inkfire-login-styler'),
-                'href' => 'https://github.com/hawks010/foundation-login-plugin',
+                'href' => 'https://github.com/Inkfire-limited/foundation-login-plugin',
                 'target' => '_blank',
                 'variant' => 'ghost',
             ],

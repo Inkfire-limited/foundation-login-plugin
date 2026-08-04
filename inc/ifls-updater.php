@@ -23,7 +23,7 @@ if (!function_exists('ifls_boot_updater')) {
         require_once $puc_loader;
 
         // 2. Configuration
-        $repoUrl = 'https://github.com/hawks010/foundation-login-plugin/';
+        $repoUrl = 'https://github.com/Inkfire-limited/foundation-login-plugin/';
         $slug    = 'foundation-inkfire-login-styler'; // Folder name on server
         
         // Path to the main plugin file (one level up from /inc/)
