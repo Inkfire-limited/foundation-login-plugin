@@ -102,7 +102,11 @@ Each incident gets a fingerprint: `sha1( type + normalised_reason )`. An inciden
 
 ### Ordering — important
 
-**Store locally first, then attempt to send.** If the incident *is* mail failure, sending will fail; the local copy is the only record. Send status (`pending` / `sent` / `failed`) is recorded per incident, `failed` ones retry on cron, and any undelivered incident is surfaced at the top of the admin screen. The local store is both the user's requested "copy under the dash" and the fallback channel when email is the thing that's broken.
+**Store locally first, then queue the send. Never send inline.**
+
+If the incident *is* mail failure, sending will fail; the local copy is the only record. Send status (`pending` / `sent` / `failed`) is recorded per incident, `failed` ones retry on cron, and any undelivered incident is surfaced at the top of the admin screen. The local store is both the requested "copy under the dash" and the fallback channel when email is the thing that's broken.
+
+**Mail is never sent during an authentication request.** Incidents are written with status `pending` and dispatched by cron (or on `shutdown` after the response has been flushed). Sending inline would mean that on a site with slow or failing SMTP, every failed login blocks for the SMTP timeout — turning a reporting feature into an outage on precisely the sites whose mail is already broken. This constraint is not negotiable during implementation.
 
 ### Storage
 
@@ -168,6 +172,17 @@ A defined constant (`IFLS_REPORT_EMAIL`, `IFLS_DISABLE_REPORTING`) always wins a
 
 ---
 
+## Fail-safety — the primary safety control
+
+This code executes on every authentication on every site the plugin runs on. It must be **architecturally incapable of breaking login**, even when it is itself broken. This matters more than any rollout strategy, because it is the control that holds when everything else has been got wrong.
+
+1. **Every entry point is wrapped.** Each public logging/reporting call sits inside `try { … } catch ( \Throwable $e ) { }` which swallows and no-ops. A failure in this feature must never propagate into the authentication path.
+2. **Always after, never before.** Logging hooks run after the auth action has completed. Nothing in this feature sits between a user and their login.
+3. **Degrade to silence.** Missing table, failed query, unwritable option, absent cron — each results in "no logging", not an error. Absence of logs is an acceptable failure mode; a broken login screen is not.
+4. **Kill switch.** `define( 'IFLS_DISABLE_DIAGNOSTICS', true )` in `wp-config.php` disables all logging, detection and reporting, checked before any other work. Recovery on a live site is one line and no database access.
+5. **The fatal handler must not fatal.** The shutdown handler that detects plugin fatals is itself the riskiest component; it does the minimum possible work, guards every call, and never allocates significantly.
+6. **No inline mail.** See the incident reporter section above.
+
 ## Security requirements
 
 - Every admin screen: `current_user_can('manage_options')` **and** nonce verification on any state change.
@@ -186,7 +201,11 @@ A defined constant (`IFLS_REPORT_EMAIL`, `IFLS_DISABLE_REPORTING`) always wins a
 
 ## Testing
 
-The rollout decision is **straight to all sites**, with no canary. That removes the safety net a staged rollout would provide, so the pre-release bar is correspondingly higher. Before tagging:
+There is no multi-day canary, so the pre-release bar is correspondingly higher and the tests below are a **gate**, not a checklist to work through afterwards. They are automated where possible, so they can be re-run on demand rather than depending on someone remembering to click through a flow.
+
+Before tagging:
+
+0. **Fail-safety is proven, not assumed.** With the events table deliberately dropped, and again with it renamed to something unwritable, login/logout/reset must all still work normally. This is the single most important test in the list: it is what makes the no-canary rollout defensible.
 
 1. Table creation and upgrade path — activate, deactivate, reactivate, upgrade from 2.0.28; confirm no duplicate-table or column errors.
 2. Every event type fires exactly once per real action (verified against live HTTP flows, not just unit-level calls).
@@ -201,4 +220,32 @@ The rollout decision is **straight to all sites**, with no canary. That removes 
 
 ## Rollout
 
-Tag `v2.1.0`, attach `foundation-inkfire-login-styler.zip`, then push to all sites via `wp plugin install <release-url> --force`. Verify table creation and login-page health on every site afterwards.
+The decision is to reach every site, not to run a multi-day canary. The safety a canary would have bought is bought instead by **load** and **ordering**, both of which can be had in about an hour.
+
+### Baseline first
+
+Bring the five stragglers (`catlawless.com` 2.0.11, `gsoasatellite.com` / `sakaradee.co.uk` / `sandhurstfire.co.uk` 1.8.1, `wendycarltonart.co.uk` 2.0.20) up to 2.0.28 **before** this feature ships, so every site upgrades from one known baseline. `catlawless.com` matters most — it still carries the broken reset form and will not self-heal.
+
+### Load-based canary, not time-based
+
+Deploy to `thatdeveloper.co.uk` and `inkfire.co.uk`, then *drive* traffic rather than waiting for it: a few hundred synthetic logins, failed logins, lockouts, reset requests and reset failures pushed through in minutes. This exercises thresholds, dedup, cooldown and pruning far harder than a week of organic traffic on a quiet site, and produces the evidence immediately.
+
+Assert afterwards: correct row counts, exactly one alert email per fingerprint, no duplicate tables, no PHP notices, and login latency unchanged.
+
+### Tested rollback, before shipping
+
+Prove the rollback works *before* it is needed — reinstall 2.0.28 over 2.1.0 on a dev site and confirm the site is healthy. The rollback command is a single `wp plugin install <2.0.28-release-url> --force`. The events table is intentionally left in place on rollback: dropping user data during an emergency is the wrong default, and an orphaned table is harmless.
+
+### Waves, not one push
+
+Same session, ~20 minutes, health sweep between each:
+
+1. Dev sites — `thatdeveloper.co.uk`, `inkfire.co.uk`
+2. Low-traffic clients
+3. Remaining clients, `base-uk.org` last
+
+A mistake that escapes the canary then reaches two sites, not twenty-three.
+
+### Automated post-deploy sweep
+
+Across every site: plugin version, table exists, `wp-login.php` returns 200 with the nonce present, reset flow completes, no new PHP fatals, and event row count is non-zero but not runaway. Any failure halts the remaining waves.
