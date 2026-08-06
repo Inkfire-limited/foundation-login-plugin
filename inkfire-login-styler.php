@@ -3,7 +3,7 @@
  * Plugin Name:       Foundation - Inkfire Login
  * Plugin URI:        https://github.com/Inkfire-limited/foundation-login-plugin/
  * Description:       Enterprise-grade login customizer. Secure, responsive, and branded.
- * Version:           2.0.26
+ * Version:           2.0.27
  * Author:            Sonny x Inkfire
  * Author URI:        https://inkfire.co.uk/
  * Text Domain:       inkfire-login-styler
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 if (!defined('INKFIRE_LOGIN_BG'))   define('INKFIRE_LOGIN_BG',   plugins_url('assets/inkfire_background.png', __FILE__));
 if (!defined('INKFIRE_LOGIN_LOGO')) define('INKFIRE_LOGIN_LOGO', plugins_url('assets/inkfire_logo.png', __FILE__));
 if (!defined('INKFIRE_LOGIN_ICON')) define('INKFIRE_LOGIN_ICON', plugins_url('assets/inkfire_icon.png', __FILE__));
-if (!defined('IFLS_VERSION'))       define('IFLS_VERSION',       '2.0.26');
+if (!defined('IFLS_VERSION'))       define('IFLS_VERSION',       '2.0.27');
 
 // Brand colors
 if (!defined('IF_TEAL'))   define('IF_TEAL',   '#32797e');
@@ -205,6 +205,53 @@ class IFLS_Enterprise_Security {
     
     public function add_csrf_tokens() { wp_nonce_field('ifls_form_action', 'ifls_form_nonce'); }
     
+    /**
+     * Whether this is one of WordPress core's own admin password-reset tools.
+     *
+     * retrieve_password() fires `lostpassword_post` for the admin tools as well
+     * as the front-end form, but those tools never render the nonce field this
+     * class adds, because that field only exists on the wp-login.php forms:
+     *
+     *   - user-edit.php "Send Reset Link"  -> wp_ajax_send_password_reset()
+     *   - users.php "Send password reset"  -> wp-admin/users.php bulk action
+     *
+     * Core already gates both with their own nonce plus an `edit_user`
+     * capability check, so re-applying the front-end nonce check here only
+     * breaks them. The capability checks below mirror core's exactly.
+     *
+     * is_admin() alone is not sufficient: it is also true for anonymous
+     * requests to admin-ajax.php, so an authenticated, capable user is
+     * required before any request is exempted.
+     *
+     * @return bool
+     */
+    private function is_core_admin_reset_request() {
+        if (!is_admin() || !is_user_logged_in()) {
+            return false;
+        }
+
+        // The bulk dropdown at the foot of users.php posts `action2`.
+        $actions = [];
+        foreach (['action', 'action2'] as $key) {
+            if (isset($_REQUEST[$key])) {
+                $actions[] = sanitize_key(wp_unslash($_REQUEST[$key]));
+            }
+        }
+
+        // user-edit.php "Send Reset Link" (admin-ajax.php).
+        if (wp_doing_ajax() && in_array('send-password-reset', $actions, true)) {
+            $target_id = isset($_POST['user_id']) ? absint($_POST['user_id']) : 0;
+            return $target_id > 0 && current_user_can('edit_user', $target_id);
+        }
+
+        // users.php "Send password reset" bulk action.
+        if (in_array('resetpassword', $actions, true)) {
+            return current_user_can('list_users');
+        }
+
+        return false;
+    }
+
     public function verify_csrf_token() {
         if (defined('WP_CLI') && WP_CLI) {
             return;
@@ -213,6 +260,11 @@ class IFLS_Enterprise_Security {
         // WooCommerce uses its own lost-password nonce and does not include the
         // custom IFLS field on the My Account reset form.
         if (isset($_POST['woocommerce-lost-password-nonce'])) {
+            return;
+        }
+
+        // Core's admin-side reset tools carry their own nonce, not ours.
+        if ($this->is_core_admin_reset_request()) {
             return;
         }
 

@@ -3,7 +3,7 @@ Contributors: Inkfire
 Tags: login, branding, security, custom login
 Requires at least: 6.0
 Tested up to: 6.9
-Stable tag: 2.0.26
+Stable tag: 2.0.27
 Requires PHP: 7.4
 License: GPLv2 or later
 
@@ -42,6 +42,10 @@ The plugin includes a self-hosted updater. When a new release is available on Gi
 This is a "Gold Master" plugin with hardcoded branding to ensure consistency across all client sites. To change branding, you must modify the assets/ folder and inkfire-login-styler.php in the source code.
 
 == Changelog ==
+
+= 2.0.27 =
+
+Fix: Stop the front-end CSRF check from rejecting WordPress core's own admin password-reset tools. The "Send Reset Link" button on user-edit.php and the "Send password reset" bulk action on users.php call retrieve_password() directly and never carry the plugin's login-form nonce, so both failed with "Security check failed." Core already protects each with its own nonce and an edit_user capability check; the plugin now defers to those and no longer double-checks. Front-end lost-password, register, and reset-password forms are unchanged and still require the plugin nonce.
 
 = 2.0.26 =
 
