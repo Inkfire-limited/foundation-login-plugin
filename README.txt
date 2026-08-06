@@ -3,7 +3,7 @@ Contributors: Inkfire
 Tags: login, branding, security, custom login
 Requires at least: 6.0
 Tested up to: 6.9
-Stable tag: 2.0.27
+Stable tag: 2.0.28
 Requires PHP: 7.4
 License: GPLv2 or later
 
@@ -42,6 +42,10 @@ The plugin includes a self-hosted updater. When a new release is available on Gi
 This is a "Gold Master" plugin with hardcoded branding to ensure consistency across all client sites. To change branding, you must modify the assets/ folder and inkfire-login-styler.php in the source code.
 
 == Changelog ==
+
+= 2.0.28 =
+
+Fix: The branded "New password" form could never actually reset a password. It read the reset key from the URL, but WordPress moves that key into the `wp-resetpass-` cookie and strips it from the URL before the form is shown, so the hidden `rp_key` field submitted empty. Core's `hash_equals()` check then failed and users were bounced to "Lost password" with an `invalidkey` error, password unchanged. The key and login are now read from the cookie exactly as wp-login.php does, with the request used only as a fallback on the initial `action=rp` render. Present since 2.0.11. Forged and tampered reset keys are still rejected.
 
 = 2.0.27 =
 

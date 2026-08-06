@@ -3,7 +3,7 @@
  * Plugin Name:       Foundation - Inkfire Login
  * Plugin URI:        https://github.com/Inkfire-limited/foundation-login-plugin/
  * Description:       Enterprise-grade login customizer. Secure, responsive, and branded.
- * Version:           2.0.27
+ * Version:           2.0.28
  * Author:            Sonny x Inkfire
  * Author URI:        https://inkfire.co.uk/
  * Text Domain:       inkfire-login-styler
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 if (!defined('INKFIRE_LOGIN_BG'))   define('INKFIRE_LOGIN_BG',   plugins_url('assets/inkfire_background.png', __FILE__));
 if (!defined('INKFIRE_LOGIN_LOGO')) define('INKFIRE_LOGIN_LOGO', plugins_url('assets/inkfire_logo.png', __FILE__));
 if (!defined('INKFIRE_LOGIN_ICON')) define('INKFIRE_LOGIN_ICON', plugins_url('assets/inkfire_icon.png', __FILE__));
-if (!defined('IFLS_VERSION'))       define('IFLS_VERSION',       '2.0.27');
+if (!defined('IFLS_VERSION'))       define('IFLS_VERSION',       '2.0.28');
 
 // Brand colors
 if (!defined('IF_TEAL'))   define('IF_TEAL',   '#32797e');
@@ -377,6 +377,40 @@ function ifls_sanitize_request($key) {
     return sanitize_text_field(wp_unslash($_REQUEST[$key]));
 }
 
+/**
+ * Resolve the password-reset login/key pair the way wp-login.php does.
+ *
+ * On `action=rp` the key arrives in the query string, but core immediately
+ * moves it into the `wp-resetpass-<COOKIEHASH>` cookie, strips it from the URL
+ * and redirects to `action=resetpass`. By the time this form is rendered the
+ * request no longer carries the key, so reading it from $_REQUEST produces an
+ * empty hidden field -- and core's
+ *
+ *     hash_equals( $rp_key, $_POST['rp_key'] )
+ *
+ * check in wp-login.php then fails, bouncing the user to
+ * `lostpassword&error=invalidkey` without ever changing the password.
+ *
+ * Read the cookie first, exactly as core does, and fall back to the request for
+ * the initial `action=rp` render before the cookie exists.
+ *
+ * @return array{0:string,1:string} [ $rp_login, $rp_key ]
+ */
+function ifls_get_reset_credentials() {
+    $rp_cookie = 'wp-resetpass-' . COOKIEHASH;
+
+    if (isset($_COOKIE[$rp_cookie]) && is_string($_COOKIE[$rp_cookie])) {
+        $raw = wp_unslash($_COOKIE[$rp_cookie]);
+        if (0 < strpos($raw, ':')) {
+            list($rp_login, $rp_key) = explode(':', $raw, 2);
+            // $rp_key is compared with hash_equals(), so it must not be altered.
+            return [sanitize_user($rp_login), $rp_key];
+        }
+    }
+
+    return [ifls_sanitize_request('login'), ifls_sanitize_request('key')];
+}
+
 function ifls_wrap_notice_markup($html, $type = 'info', $id = '') {
     if ($html === '') return '';
     $classes = $type === 'error' ? 'error' : 'message info';
@@ -494,8 +528,7 @@ function ifls_render_inline_form($action) {
     
     // RESET PASSWORD
     if ($action === 'rp' || $action === 'resetpass') {
-        $rp_key = ifls_sanitize_request('key');
-        $rp_login = ifls_sanitize_request('login');
+        list($rp_login, $rp_key) = ifls_get_reset_credentials();
         ob_start(); ?>
         <h2 class="if-card-title"><?php echo esc_html(__('New password', 'inkfire-login-styler')); ?></h2>
         <form name="resetpassform" id="if_resetpassform" action="<?php echo esc_url(site_url('wp-login.php?action=resetpass', 'login_post')); ?>" method="post" autocomplete="off">
