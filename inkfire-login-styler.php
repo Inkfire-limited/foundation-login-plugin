@@ -288,16 +288,13 @@ class IFLS_Asset_Manager {
             case 'icon': return INKFIRE_LOGIN_ICON;
             case 'css': return plugins_url('assets/inkfire-login.css', __FILE__);
             case 'js': return plugins_url('assets/inkfire-login.js', __FILE__);
-            case 'fa': return 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css';
             default: return '';
         }
     }
     
     public static function enqueue_assets() {
         wp_dequeue_style('login');
-        
-        wp_enqueue_style('if-fa', self::get_asset_url('fa'), [], '6.5.2');
-        
+
         $css_path = plugin_dir_path(__FILE__) . 'assets/inkfire-login.css';
         $js_path  = plugin_dir_path(__FILE__) . 'assets/inkfire-login.js';
         
@@ -340,6 +337,33 @@ class IFLS_Asset_Manager {
 /* ==========================================================================
    Core Functions
    ========================================================================== */
+
+/**
+ * Inline brand icon markup.
+ *
+ * Replaces the Font Awesome CDN stylesheet, which pulled a large third-party
+ * bundle onto every login page for five icons and disclosed every visitor's IP
+ * address to an external host. Paths are the Font Awesome 6 free brand glyphs
+ * (CC BY 4.0, fontawesome.com/license/free).
+ *
+ * @param string $network facebook|instagram|linkedin|x|tiktok
+ * @return string SVG markup, or '' for an unknown network.
+ */
+function ifls_social_icon($network) {
+    $paths = [
+        'facebook'  => 'M80 299.3V512h116V299.3h86.5l18-97.8H196v-33.3c0-51.6 20.2-71.8 72.5-71.8 16.3 0 29.4.4 37 1.2V9.8C291.4 3.3 273.2 0 255.6 0c-107 0-156.5 50.5-156.5 158.4v43.8H24v97.8h56v-.7z',
+        'instagram' => 'M224.1 141c-63.6 0-114.9 51.3-114.9 114.9s51.3 114.9 114.9 114.9S339 319.5 339 255.9 287.7 141 224.1 141zm0 189.6c-41.1 0-74.7-33.5-74.7-74.7s33.5-74.7 74.7-74.7 74.7 33.5 74.7 74.7-33.6 74.7-74.7 74.7zm146.4-194.3c0 14.9-12 26.8-26.8 26.8-14.9 0-26.8-12-26.8-26.8s12-26.8 26.8-26.8 26.8 12 26.8 26.8zm76.1 27.2c-1.7-35.9-9.9-67.7-36.2-93.9-26.2-26.2-58-34.4-93.9-36.2-37-2.1-147.9-2.1-184.9 0-35.8 1.7-67.6 9.9-93.9 36.1s-34.4 58-36.2 93.9c-2.1 37-2.1 147.9 0 184.9 1.7 35.9 9.9 67.7 36.2 93.9s58 34.4 93.9 36.2c37 2.1 147.9 2.1 184.9 0 35.9-1.7 67.7-9.9 93.9-36.2 26.2-26.2 34.4-58 36.2-93.9 2.1-37 2.1-147.8 0-184.8zM398.8 388c-7.8 19.6-22.9 34.7-42.6 42.6-29.5 11.7-99.5 9-132.1 9s-102.7 2.6-132.1-9c-19.6-7.8-34.7-22.9-42.6-42.6-11.7-29.5-9-99.5-9-132.1s-2.6-102.7 9-132.1c7.8-19.6 22.9-34.7 42.6-42.6 29.5-11.7 99.5-9 132.1-9s102.7-2.6 132.1 9c19.6 7.8 34.7 22.9 42.6 42.6 11.7 29.5 9 99.5 9 132.1s2.7 102.7-9 132.1z',
+        'linkedin'  => 'M100.3 448H7.4V148.9h92.9V448zM53.8 108.1C24.1 108.1 0 83.5 0 53.8a53.8 53.8 0 0 1 107.6 0c0 29.7-24.1 54.3-53.8 54.3zM447.9 448h-92.7V302.4c0-34.7-.7-79.2-48.3-79.2-48.3 0-55.7 37.7-55.7 76.7V448h-92.8V148.9h89.1v40.8h1.3c12.4-23.5 42.7-48.3 87.9-48.3 94 0 111.3 61.9 111.3 142.3V448z',
+        'x'         => 'M389.2 48h70.6L305.6 224.2 487 464H345L233.7 318.6 106.5 464H35.8L200.7 275.5 26.8 48H172.4L272.9 180.9 389.2 48zM364.4 421.8h39.1L151.1 88h-42l255.3 333.8z',
+        'tiktok'    => 'M448 209.9a210.1 210.1 0 0 1-122.8-39.3v178.8A162.6 162.6 0 1 1 185 188.3v89.9a74.6 74.6 0 1 0 52.2 71.2V0h88a121.2 121.2 0 0 0 1.9 22.2 122.2 122.2 0 0 0 53.9 80.2 121.4 121.4 0 0 0 67 20.1z',
+    ];
+
+    if (!isset($paths[$network])) {
+        return '';
+    }
+
+    return '<svg class="if-social-icon" viewBox="0 0 448 512" width="18" height="18" fill="currentColor" aria-hidden="true" focusable="false"><path d="' . esc_attr($paths[$network]) . '"/></svg>';
+}
 
 function ifls_login_header_url() { return home_url('/'); }
 function ifls_login_header_text() { return get_bloginfo('name'); }
@@ -657,7 +681,7 @@ function ifls_render_login_layout() {
             <aside class="if-left" role="complementary">
                 <div class="if-left-block"><img class="if-icon" src="<?php echo esc_url(INKFIRE_LOGIN_ICON); ?>" alt="" /><h3>Stay in touch</h3><p><a class="if-accent" href="mailto:hello@inkfire.co.uk">hello@inkfire.co.uk</a><br><a class="if-accent" href="tel:+443336134653">+44 (0)333 613 4653</a><br><a class="if-accent" href="https://inkfire.co.uk/" target="_blank" rel="noopener noreferrer">inkfire.co.uk</a></p></div>
                 <div class="if-left-block"><h4>Opening Times</h4><p>Monday – Friday<br><strong>9am – 5pm GMT</strong></p></div>
-                <div class="if-left-block"><h4>Follow Us</h4><div class="if-socials"><a href="https://facebook.com/inkfirelimited" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-facebook-f"></i></a><a href="https://www.instagram.com/inkfirelimited/" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-instagram"></i></a><a href="https://uk.linkedin.com/company/inkfire" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-linkedin-in"></i></a><a href="https://twitter.com/Inkfirelimited" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-x-twitter"></i></a><a href="https://www.tiktok.com/@inkfirelimited" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-tiktok"></i></a></div></div>
+                <div class="if-left-block"><h4>Follow Us</h4><div class="if-socials"><a href="https://facebook.com/inkfirelimited" target="_blank" rel="noopener noreferrer" aria-label="<?php esc_attr_e('Inkfire on Facebook', 'inkfire-login-styler'); ?>"><?php echo ifls_social_icon('facebook'); ?></a><a href="https://www.instagram.com/inkfirelimited/" target="_blank" rel="noopener noreferrer" aria-label="<?php esc_attr_e('Inkfire on Instagram', 'inkfire-login-styler'); ?>"><?php echo ifls_social_icon('instagram'); ?></a><a href="https://uk.linkedin.com/company/inkfire" target="_blank" rel="noopener noreferrer" aria-label="<?php esc_attr_e('Inkfire on LinkedIn', 'inkfire-login-styler'); ?>"><?php echo ifls_social_icon('linkedin'); ?></a><a href="https://twitter.com/Inkfirelimited" target="_blank" rel="noopener noreferrer" aria-label="<?php esc_attr_e('Inkfire on X', 'inkfire-login-styler'); ?>"><?php echo ifls_social_icon('x'); ?></a><a href="https://www.tiktok.com/@inkfirelimited" target="_blank" rel="noopener noreferrer" aria-label="<?php esc_attr_e('Inkfire on TikTok', 'inkfire-login-styler'); ?>"><?php echo ifls_social_icon('tiktok'); ?></a></div></div>
                 <div class="if-left-block if-legal"><p class="if-legal-small">Company Number: 15153305<br>VAT Number: GB483189752</p></div>
                 <?php if ($lang_selector) : ?><div class="if-left-block if-lang-left"><?php echo $lang_selector; ?></div><?php endif; ?>
             </aside>
@@ -836,12 +860,28 @@ function ifls_add_plugin_icon() {
 }
 add_action('admin_head', 'ifls_add_plugin_icon');
 
-add_action('admin_enqueue_scripts', function() {
+/**
+ * Load the login stylesheet on this plugin's own admin screens only.
+ *
+ * This was previously enqueued on EVERY wp-admin page, which is wasted weight
+ * on every admin request and risks the login styles bleeding into unrelated
+ * screens. A named function rather than a closure so it can be tested directly
+ * and unhooked by a site that needs to.
+ *
+ * @param string $hook Current admin page hook suffix.
+ */
+function ifls_enqueue_admin_assets($hook) {
+    if (false === strpos((string) $hook, 'foundation-login-styler')) {
+        return;
+    }
+
     $css_path = plugin_dir_path(__FILE__) . 'assets/inkfire-login.css';
-    $css_ver = file_exists($css_path) ? filemtime($css_path) : IFLS_VERSION;
+    $css_ver  = file_exists($css_path) ? filemtime($css_path) : IFLS_VERSION;
+
     wp_enqueue_style('inkfire-login', plugins_url('assets/inkfire-login.css', __FILE__), [], $css_ver);
     wp_add_inline_style('inkfire-login', IFLS_Asset_Manager::generate_css_variables());
-});
+}
+add_action('admin_enqueue_scripts', 'ifls_enqueue_admin_assets');
 
 register_activation_hook(__FILE__, function() { add_option('ifls_installed_version', IFLS_VERSION); });
 
@@ -850,6 +890,5 @@ add_filter('login_headertext', 'ifls_login_header_text');
 add_filter('login_body_class', 'ifls_login_body_class');
 add_action('login_header', 'ifls_render_login_layout');
 add_action('login_enqueue_scripts', ['IFLS_Asset_Manager', 'enqueue_assets']);
-add_action('login_footer', '__return_null');
 add_filter('login_redirect', 'ifls_secure_login_redirect', 10, 3);
 add_filter('plugin_row_meta', 'ifls_plugin_row_meta', 10, 2);
