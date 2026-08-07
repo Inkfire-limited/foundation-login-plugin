@@ -50,6 +50,10 @@ if (file_exists($updater_file)) {
 require_once __DIR__ . '/inc/ifls-diagnostics-settings.php';
 require_once __DIR__ . '/inc/class-ifls-event-log.php';
 require_once __DIR__ . '/inc/class-ifls-incident-reporter.php';
+require_once __DIR__ . '/inc/class-ifls-mail-diagnostics.php';
+require_once __DIR__ . '/inc/class-ifls-diagnostics-admin.php';
+
+IFLS_Diagnostics_Admin::init();
 
 // A five-minute schedule for threshold evaluation and queued dispatch.
 add_filter('cron_schedules', function($schedules) {

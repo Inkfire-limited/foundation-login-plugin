@@ -134,9 +134,16 @@ class IFLS_Event_Log {
 
         $outcome = isset($args['outcome']) ? $args['outcome'] : self::default_outcome($event);
 
+        // Keep the attempted username as submitted, minus control characters.
+        //
+        // sanitize_user( $u, true ) would reduce a payload like
+        // "<script>alert(1)</script>" to an empty string - safe, but it throws
+        // away the single most useful fact in an audit log: what was actually
+        // tried. Storage keeps the evidence; every render path escapes it.
         $username = '';
         if (isset($args['username']) && is_scalar($args['username'])) {
-            $username = substr(sanitize_user((string) $args['username'], true), 0, 180);
+            $username = preg_replace('/[\x00-\x1F\x7F]/u', '', (string) $args['username']);
+            $username = mb_substr((string) $username, 0, 180);
         }
 
         $user_agent = '';
