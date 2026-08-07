@@ -3,7 +3,7 @@
  * Plugin Name:       Foundation - Inkfire Login
  * Plugin URI:        https://github.com/Inkfire-limited/foundation-login-plugin/
  * Description:       Enterprise-grade login customizer. Secure, responsive, and branded.
- * Version:           2.0.28
+ * Version:           2.1.0
  * Author:            Sonny x Inkfire
  * Author URI:        https://inkfire.co.uk/
  * Text Domain:       inkfire-login-styler
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 if (!defined('INKFIRE_LOGIN_BG'))   define('INKFIRE_LOGIN_BG',   plugins_url('assets/inkfire_background.png', __FILE__));
 if (!defined('INKFIRE_LOGIN_LOGO')) define('INKFIRE_LOGIN_LOGO', plugins_url('assets/inkfire_logo.png', __FILE__));
 if (!defined('INKFIRE_LOGIN_ICON')) define('INKFIRE_LOGIN_ICON', plugins_url('assets/inkfire_icon.png', __FILE__));
-if (!defined('IFLS_VERSION'))       define('IFLS_VERSION',       '2.0.28');
+if (!defined('IFLS_VERSION'))       define('IFLS_VERSION',       '2.1.0');
 
 // Brand colors
 if (!defined('IF_TEAL'))   define('IF_TEAL',   '#32797e');
@@ -234,7 +234,14 @@ class IFLS_Enterprise_Security {
         });
 
         add_action('wp_logout', function($user_id) {
-            IFLS_Event_Log::record('logout', ['user_id' => $user_id]);
+            // Core passes only the ID; resolve the login so the audit log is
+            // readable without cross-referencing user IDs by hand.
+            $user = $user_id ? get_userdata($user_id) : false;
+
+            IFLS_Event_Log::record('logout', [
+                'user_id'  => $user_id,
+                'username' => $user ? $user->user_login : '',
+            ]);
         });
 
         // Fires inside get_password_reset_key(), so this records that a reset

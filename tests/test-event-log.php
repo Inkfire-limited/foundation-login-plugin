@@ -41,17 +41,35 @@ ifls_test(
 );
 
 ifls_test(
-	'event log: outcome defaults are sensible per event type',
+	'event log: every event type gets a sensible outcome',
 	function () {
-		IFLS_Event_Log::clear();
-		IFLS_Event_Log::record( 'login_failed', array( 'username' => 'x' ) );
-		IFLS_Event_Log::record( 'csrf_blocked', array() );
+		// A wrong default here is not cosmetic: filtering the log by
+		// outcome=failure would surface legitimate activity as failures.
+		$expected = array(
+			'login_success'   => 'success',
+			'logout'          => 'success',
+			'registration'    => 'success',
+			'reset_requested' => 'success',
+			'reset_completed' => 'success',
+			'login_failed'    => 'failure',
+			'reset_failed'    => 'failure',
+			'csrf_blocked'    => 'blocked',
+			'lockout'         => 'blocked',
+		);
 
-		$failed  = IFLS_Event_Log::query( array( 'event' => 'login_failed' ) );
-		$blocked = IFLS_Event_Log::query( array( 'event' => 'csrf_blocked' ) );
+		// Every declared event must be covered by this test.
+		foreach ( IFLS_Event_Log::EVENTS as $event ) {
+			ifls_assert( isset( $expected[ $event ] ), "event {$event} has no expected outcome in this test" );
+		}
 
-		ifls_assert_eq( 'failure', $failed[0]->outcome );
-		ifls_assert_eq( 'blocked', $blocked[0]->outcome );
+		foreach ( $expected as $event => $outcome ) {
+			IFLS_Event_Log::clear();
+			IFLS_Event_Log::record( $event, array( 'username' => 'x' ) );
+
+			$rows = IFLS_Event_Log::query( array( 'event' => $event ) );
+			ifls_assert_eq( 1, count( $rows ), "{$event} was not recorded" );
+			ifls_assert_eq( $outcome, $rows[0]->outcome, "wrong outcome for {$event}:" );
+		}
 	}
 );
 

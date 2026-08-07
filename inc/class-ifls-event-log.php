@@ -172,7 +172,18 @@ class IFLS_Event_Log {
      * @return string
      */
     private static function default_outcome($event) {
-        if (in_array($event, ['login_success', 'reset_completed', 'registration', 'logout'], true)) {
+        // reset_requested belongs here: a key was successfully issued. Letting
+        // it fall through to 'failure' made legitimate reset requests appear
+        // when filtering the log for failures.
+        $succeeded = [
+            'login_success',
+            'logout',
+            'registration',
+            'reset_requested',
+            'reset_completed',
+        ];
+
+        if (in_array($event, $succeeded, true)) {
             return 'success';
         }
 

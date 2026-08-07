@@ -3,7 +3,7 @@ Contributors: Inkfire
 Tags: login, branding, security, custom login
 Requires at least: 6.0
 Tested up to: 6.9
-Stable tag: 2.0.28
+Stable tag: 2.1.0
 Requires PHP: 7.4
 License: GPLv2 or later
 
@@ -42,6 +42,24 @@ The plugin includes a self-hosted updater. When a new release is available on Gi
 This is a "Gold Master" plugin with hardcoded branding to ensure consistency across all client sites. To change branding, you must modify the assets/ folder and inkfire-login-styler.php in the source code.
 
 == Changelog ==
+
+= 2.1.0 =
+
+New: Authentication event log. Logins, failed logins, logouts, lockouts, registrations, password reset requests, completions and failures are recorded on this site, with a filterable viewer under Foundation > Login Diagnostics and an on-demand IP location lookup. Automatically pruned after 90 days. This data never leaves the site it was recorded on.
+
+New: Automatic incident reporting. When the plugin itself malfunctions - mail failures, a burst of blocked security checks, password resets failing with no successes, or a fatal error inside the plugin - an alert is emailed with the site domain and full technical context, and a copy is kept on the site even if that email could not be delivered. Alerts are deduplicated, so a broken site reports once rather than continuously.
+
+New: Mail diagnostics. A test-send button reporting exactly what the transport did, plus MX, SPF and DMARC inspection that flags the common failure where a domain's email is hosted externally but WordPress is sending through the local PHP mail() transport.
+
+New: Diagnostics settings screen for recipient, alert thresholds and retention. Constants in wp-config.php override and lock any field, and IFLS_DISABLE_DIAGNOSTICS switches the whole feature off.
+
+Fix: The login stylesheet is no longer loaded on every wp-admin page; it now loads only on this plugin's own screens.
+
+Fix: Replaced the Font Awesome CDN with inline SVG icons. The login page no longer makes any third-party request, and the social links gained the accessible names the icon font never had.
+
+Fix: Uninstall cleanup now works on sites using a persistent object cache, where transients never touch the options table and the previous direct SQL delete was a silent no-op.
+
+Fix: Removed a no-op login_footer hook that removed nothing.
 
 = 2.0.28 =
 
