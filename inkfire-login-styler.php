@@ -137,6 +137,8 @@ class IFLS_Enterprise_Security {
             add_action($action, [$this, 'verify_csrf_token']);
         }
 
+        $this->register_event_capture();
+
         // Email validation hook
         add_filter('registration_errors', function($errors, $sanitized_user_login, $user_email) {
             if (!filter_var($user_email, FILTER_VALIDATE_EMAIL)) {
@@ -144,6 +146,64 @@ class IFLS_Enterprise_Security {
             }
             return $errors;
         }, 10, 3);
+    }
+
+    /**
+     * Observe authentication events for the on-site audit log.
+     *
+     * Every callback runs AFTER the action it observes, and
+     * IFLS_Event_Log::record() swallows its own errors, so nothing here can
+     * interrupt or slow down authentication.
+     */
+    private function register_event_capture() {
+        add_action('wp_login', function($user_login, $user) {
+            IFLS_Event_Log::record('login_success', [
+                'username' => $user_login,
+                'user_id'  => isset($user->ID) ? $user->ID : 0,
+            ]);
+        }, 10, 2);
+
+        add_action('wp_login_failed', function($username) {
+            IFLS_Event_Log::record('login_failed', ['username' => $username]);
+        });
+
+        add_action('wp_logout', function($user_id) {
+            IFLS_Event_Log::record('logout', ['user_id' => $user_id]);
+        });
+
+        // Fires inside get_password_reset_key(), so this records that a reset
+        // key was genuinely issued rather than merely requested.
+        add_action('retrieve_password', function($user_login) {
+            IFLS_Event_Log::record('reset_requested', ['username' => $user_login]);
+        });
+
+        add_action('after_password_reset', function($user) {
+            // The second argument is the new password. Deliberately not captured.
+            IFLS_Event_Log::record('reset_completed', [
+                'username' => isset($user->user_login) ? $user->user_login : '',
+                'user_id'  => isset($user->ID) ? $user->ID : 0,
+            ]);
+        });
+
+        add_action('register_post', function($login) {
+            IFLS_Event_Log::record('registration', ['username' => $login]);
+        });
+
+        // A failed reset key redirects to lostpassword&error=invalidkey. This is
+        // the exact signature the 2.0.28 bug emitted for seven months.
+        add_action('login_init', function() {
+            if (!isset($_GET['error']) || 'invalidkey' !== $_GET['error']) {
+                return;
+            }
+
+            if (!isset($_GET['action']) || 'lostpassword' !== $_GET['action']) {
+                return;
+            }
+
+            IFLS_Event_Log::record('reset_failed', [
+                'detail' => ['reason' => 'invalidkey'],
+            ]);
+        }, 5);
     }
 
     private function parse_forwarded_ip_header($value) {
@@ -204,6 +264,7 @@ class IFLS_Enterprise_Security {
         $attempts = get_transient($key) ?: 0;
         if ($attempts >= IFLS_MAX_LOGIN_ATTEMPTS) {
             $time_left = max(1, $this->get_lockout_time_left($username));
+            IFLS_Event_Log::record('lockout', ['username' => $username]);
             return new WP_Error('too_many_attempts', sprintf(__('Too many failed attempts. Try again in %d minutes.', 'inkfire-login-styler'), ceil($time_left / 60)));
         }
         return $user;
@@ -294,6 +355,12 @@ class IFLS_Enterprise_Security {
         }
 
         if (!isset($_POST['ifls_form_nonce']) || !wp_verify_nonce($_POST['ifls_form_nonce'], 'ifls_form_action')) {
+            // Recorded before dying: a burst of these is what the 2.0.27 bug
+            // looked like from the outside, and is what now raises an alert.
+            IFLS_Event_Log::record('csrf_blocked', [
+                'detail' => ['hook' => current_action()],
+            ]);
+
             wp_die(__('Security check failed.', 'inkfire-login-styler'), __('Error', 'inkfire-login-styler'), ['response' => 403]);
         }
     }
