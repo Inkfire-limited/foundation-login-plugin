@@ -49,6 +49,64 @@ if (file_exists($updater_file)) {
    ========================================================================== */
 require_once __DIR__ . '/inc/ifls-diagnostics-settings.php';
 require_once __DIR__ . '/inc/class-ifls-event-log.php';
+require_once __DIR__ . '/inc/class-ifls-incident-reporter.php';
+
+// A five-minute schedule for threshold evaluation and queued dispatch.
+add_filter('cron_schedules', function($schedules) {
+    if (!isset($schedules['ifls_five_minutes'])) {
+        $schedules['ifls_five_minutes'] = [
+            'interval' => 300,
+            'display'  => __('Every 5 minutes (Inkfire diagnostics)', 'inkfire-login-styler'),
+        ];
+    }
+    return $schedules;
+});
+
+// Mail failures - the class of problem that started all this.
+add_action('wp_mail_failed', function($error) {
+    IFLS_Incident_Reporter::raise(
+        'mail_failure',
+        is_wp_error($error) ? $error->get_error_message() : 'unknown mail error'
+    );
+});
+
+add_action('ifls_dispatch_incidents', function() {
+    IFLS_Incident_Reporter::check_thresholds();
+    IFLS_Incident_Reporter::dispatch();
+});
+
+// Opportunistic flush so alerts arrive promptly without waiting for cron -
+// but NEVER on wp-login.php, because an SMTP call there would block logins.
+add_action('shutdown', function() {
+    if (isset($GLOBALS['pagenow']) && 'wp-login.php' === $GLOBALS['pagenow']) {
+        return;
+    }
+
+    if (defined('DOING_CRON') && DOING_CRON) {
+        return; // The cron hook above already handles this.
+    }
+
+    IFLS_Incident_Reporter::dispatch();
+}, 1000);
+
+// Catch fatals originating inside this plugin. Kept deliberately minimal: this
+// runs during a crash and must not allocate or fail itself.
+register_shutdown_function(function() {
+    $error = error_get_last();
+
+    if (!$error || !in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {
+        return;
+    }
+
+    if (!isset($error['file']) || false === strpos($error['file'], 'foundation-inkfire-login-styler')) {
+        return;
+    }
+
+    IFLS_Incident_Reporter::raise(
+        'plugin_fatal',
+        sprintf('%s in %s:%d', $error['message'], basename($error['file']), $error['line'])
+    );
+});
 
 // Create/upgrade the event table and ensure the prune job exists. Activation
 // hooks do not fire on plugin UPDATE, so the schema version is checked on every
@@ -64,6 +122,10 @@ add_action('plugins_loaded', function() {
 
     if (!wp_next_scheduled('ifls_prune_events')) {
         wp_schedule_event(time() + HOUR_IN_SECONDS, 'daily', 'ifls_prune_events');
+    }
+
+    if (!wp_next_scheduled('ifls_dispatch_incidents')) {
+        wp_schedule_event(time() + 300, 'ifls_five_minutes', 'ifls_dispatch_incidents');
     }
 }, 20);
 

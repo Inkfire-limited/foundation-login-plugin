@@ -52,16 +52,30 @@ function ifls_test_boot( $wp_root, array $context = array() ) {
  */
 function ifls_test_block_mail() {
 	$GLOBALS['ifls_test_mail'] = array();
+	$GLOBALS['ifls_test_mail_fails'] = false;
 
+	// Runs at PHP_INT_MAX so nothing can re-enable real sending after it. That
+	// also means a test cannot simulate failure with its own pre_wp_mail
+	// filter, since this one would run last and win - use
+	// ifls_force_mail_failure() instead.
 	add_filter(
 		'pre_wp_mail',
 		function ( $null, $atts ) {
 			$GLOBALS['ifls_test_mail'][] = $atts;
-			return true;
+			return empty( $GLOBALS['ifls_test_mail_fails'] );
 		},
 		PHP_INT_MAX,
 		2
 	);
+}
+
+/**
+ * Make wp_mail() report failure while still never sending anything.
+ *
+ * @param bool $fails Whether wp_mail() should return false.
+ */
+function ifls_force_mail_failure( $fails = true ) {
+	$GLOBALS['ifls_test_mail_fails'] = (bool) $fails;
 }
 
 /**
