@@ -48,6 +48,26 @@ if (file_exists($updater_file)) {
    Diagnostics
    ========================================================================== */
 require_once __DIR__ . '/inc/ifls-diagnostics-settings.php';
+require_once __DIR__ . '/inc/class-ifls-event-log.php';
+
+// Create/upgrade the event table and ensure the prune job exists. Activation
+// hooks do not fire on plugin UPDATE, so the schema version is checked on every
+// load rather than relying on activation alone.
+add_action('plugins_loaded', function() {
+    if (!ifls_diag_enabled()) {
+        return;
+    }
+
+    if (get_option('ifls_events_db_version') !== IFLS_Event_Log::DB_VERSION) {
+        IFLS_Event_Log::install();
+    }
+
+    if (!wp_next_scheduled('ifls_prune_events')) {
+        wp_schedule_event(time() + HOUR_IN_SECONDS, 'daily', 'ifls_prune_events');
+    }
+}, 20);
+
+add_action('ifls_prune_events', ['IFLS_Event_Log', 'prune']);
 
 /* ==========================================================================
    CONFIRM ADMIN EMAIL FIXES
