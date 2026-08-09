@@ -1,6 +1,6 @@
 /**
- * Foundation - Inkfire Login v2.2.1
- * Restrained dark-glass system aligned with Inkfire's Dark Prism palette.
+ * Foundation - Inkfire Login v2.2.2
+ * Dark-glass system aligned with Inkfire's animated hero palette.
  */
 
 :root {
@@ -103,7 +103,7 @@ body.login .privacy-policy-page-link {
 }
 
 /* ==========================================================================
-   Dark Prism canvas: intentionally restrained, not multi-coloured
+   Inkfire hero canvas
    ========================================================================== */
 
 .if-full-bg {
@@ -117,36 +117,17 @@ body.login .privacy-policy-page-link {
     padding: clamp(18px, 3.5vw, 48px);
     overflow: hidden;
 
-    /* Requested background stack. */
+    /* Match the Inkfire animated hero palette without a competing watermark. */
     background:
-        radial-gradient(circle at 10% 40%, rgba(251, 204, 191, 0.08), transparent 55%),
-        radial-gradient(circle at 90% 15%, rgba(23, 154, 214, 0.08), transparent 55%),
-        linear-gradient(180deg, #1a1c29 0%, #151622 100%);
+        radial-gradient(112% 132% at 100% 0%, rgba(219, 88, 68, 0.18) 0%, transparent 74%),
+        radial-gradient(92% 112% at 0% 8%, rgba(7, 160, 121, 0.14) 0%, transparent 70%),
+        radial-gradient(80% 95% at 48% 100%, rgba(226, 114, 0, 0.08) 0%, transparent 62%),
+        #151622;
     border: 1px solid rgba(255, 255, 255, 0.06);
     box-shadow:
         inset 0 0 18px rgba(0, 0, 0, 0.55),
         inset 0 1px 0 rgba(255, 255, 255, 0.12),
         0 0 10px 5px rgba(0, 0, 0, 0.5);
-}
-
-/* Decorative Inkfire mark used on the main site hero. It remains decorative,
-   but is now legible through the transparent account surface. */
-.if-full-bg::after {
-    content: "";
-    position: absolute;
-    z-index: 0;
-    top: 50%;
-    right: clamp(-120px, -5vw, -44px);
-    width: min(58vw, 920px);
-    height: min(92vh, 980px);
-    transform: translateY(-50%);
-    pointer-events: none;
-    background-image: var(--if-bg-icon);
-    background-repeat: no-repeat;
-    background-position: center right;
-    background-size: contain;
-    opacity: 0.13;
-    filter: grayscale(1) brightness(1.9) contrast(0.88);
 }
 
 /* ==========================================================================
@@ -350,25 +331,23 @@ body.login .privacy-policy-page-link {
     display: flex;
     flex-direction: column;
     min-width: 0;
-    isolation: isolate;
     background:
-        radial-gradient(circle at 100% 0%, rgba(255, 255, 255, 0.11), transparent 42%),
-        radial-gradient(circle at 100% 70%, rgba(7, 160, 121, 0.08), transparent 48%),
-        linear-gradient(160deg, rgba(24, 27, 42, 0.46), rgba(17, 20, 31, 0.22));
-    -webkit-backdrop-filter: blur(7px) saturate(114%);
-    backdrop-filter: blur(7px) saturate(114%);
-}
-
-.if-right::before {
-    content: "";
-    position: absolute;
-    z-index: 0;
-    inset: 0;
-    pointer-events: none;
-    background:
-        linear-gradient(90deg, rgba(255, 255, 255, 0.035), transparent 12%, transparent 88%, rgba(255, 255, 255, 0.06)),
-        linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent 24%);
-    box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.08);
+        radial-gradient(circle at 0% 0%, rgba(251, 204, 191, 0.22), transparent 62%),
+        radial-gradient(circle at 100% 0%, rgba(30, 97, 103, 0.32), transparent 58%),
+        radial-gradient(115% 140% at 50% 115%, rgba(255, 255, 255, 0.04), transparent 70%),
+        #1c1d2d;
+    padding: 1.6rem 1.7rem;
+    overflow: hidden;
+    color: #f2f2f2;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 32px;
+    box-shadow:
+        inset 0 0 14px rgba(0, 0, 0, 0.28),
+        inset 0 1px 0 rgba(255, 255, 255, 0.13),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.45),
+        0 4px 14px rgba(0, 0, 0, 0.38);
+    -webkit-backdrop-filter: blur(18px);
+    backdrop-filter: blur(18px);
 }
 
 .if-right > * {
@@ -1253,10 +1232,6 @@ body.login .privacy-policy-page-link {
 }
 
 @media (forced-colors: active) {
-    .if-full-bg::after {
-        display: none;
-    }
-
     .if-shell,
     .if-left,
     .if-teal,
@@ -1280,7 +1255,7 @@ body.login .privacy-policy-page-link {
     }
 
     .if-card {
-        background-color: #1e4e47;
+        background-color: #1c1d2d;
     }
 }
 
@@ -1350,14 +1325,4 @@ body.login .privacy-policy-page-link {
         linear-gradient(180deg, rgba(21, 22, 34, 0.32), rgba(21, 22, 34, 0.32)),
         linear-gradient(135deg, rgba(226, 114, 0, 0.55) 0%, rgba(219, 88, 68, 0.60) 100%);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25), inset 0 0 20px rgba(226, 114, 0, 0.10);
-}
-
-
-@media (max-width: 980px) {
-    .if-full-bg::after {
-        right: -20vw;
-        width: min(92vw, 720px);
-        height: 70vh;
-        opacity: 0.035;
-    }
 }
