@@ -3,7 +3,7 @@ Contributors: Inkfire
 Tags: login, branding, security, custom login
 Requires at least: 6.0
 Tested up to: 6.9
-Stable tag: 2.2.1
+Stable tag: 2.2.2
 Requires PHP: 7.4
 License: GPLv2 or later
 
@@ -42,6 +42,10 @@ The plugin includes a self-hosted updater. When a new release is available on Gi
 This is a "Gold Master" plugin with hardcoded branding to ensure consistency across all client sites. To change branding, you must modify the assets/ folder and inkfire-login-styler.php in the source code.
 
 == Changelog ==
+
+= 2.2.2 =
+
+Design: Removed the oversized background mark, matched the outer login canvas to Inkfire's animated hero gradient, and replaced the muddy account-side wash with a controlled dark-glass surface. The solid authentication card remains unchanged.
 
 = 2.2.1 =
 

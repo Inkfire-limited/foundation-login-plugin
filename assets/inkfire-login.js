@@ -1,4 +1,4 @@
-// Foundation - Inkfire Login v2.2.1 - resilient, accessible login enhancements
+// Foundation - Inkfire Login v2.2.2 - resilient, accessible login enhancements
 (function () {
     'use strict';
 
