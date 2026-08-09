@@ -1,514 +1,1363 @@
 /**
- * Inkfire Login Styler - Enterprise Gold v2.0.10
- * EXACT Original Branding + Accessibility & Security Fixes
+ * Foundation - Inkfire Login v2.2.1
+ * Restrained dark-glass system aligned with Inkfire's Dark Prism palette.
  */
 
 :root {
-    /* ORIGINAL BRAND COLORS (Strictly enforced) */
-    --if-teal: #32797e;
-    --if-teal-dark: #1e6167;
+    --if-shadow-deep: #151622;
+    --if-shadow-mid: #1c1d2d;
+    --if-shadow-soft: #242635;
+    --if-pine: #1e4e47;
+    --if-pine-deep: #173e39;
+    --if-seaweed: #07a079;
+    --if-almond: #fbccbf;
+    --if-almond-strong: #ffd9cf;
+    --if-ochre: #e27200;
+    --if-smoke: #f2f2f2;
+    --if-white: #ffffff;
+    --if-ink: #151622;
+    --if-muted: #d7d8df;
+    --if-muted-soft: #bfc1cb;
+    --if-danger: #ffb4aa;
+    --if-danger-surface: rgba(92, 27, 31, 0.78);
+    --if-info: #a9e6d3;
+    --if-info-surface: rgba(12, 58, 54, 0.72);
+    --if-notice-base: #f5977a;
+    --if-notice-orange: #e27200;
+    --if-notice-coral: #db5844;
+    --if-line: rgba(255, 255, 255, 0.15);
+    --if-line-soft: rgba(255, 255, 255, 0.08);
+    --if-focus: #fbccbf;
+    --if-radius-shell: 40px;
+    --if-radius-main: 50px;
+    --if-radius-card: 42px;
+    --if-radius-control: 16px;
+    --if-ease: 180ms cubic-bezier(0.2, 0.7, 0.2, 1);
+
+    /* Backwards-compatible aliases populated by PHP too. */
+    --if-teal: #1e4e47;
+    --if-teal-dark: #151622;
     --if-pill: #fbccbf;
     --if-text: #111111;
     --if-orange: #e27200;
-    
-    /* ASSETS (Relative to this CSS file) */
-    --if-bg-image: url('inkfire_background.png');
-    --if-bg-overlay: rgba(0, 0, 0, 0.2);
-    
-    /* Layout */
-    --if-transition: 0.3s ease;
-    --if-radius: 12px;
-    --if-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
 }
 
 /* ==========================================================================
-   Global & Reset
+   Reset and WordPress shell suppression
    ========================================================================== */
-.login h1, .login #backtoblog, .login #nav { display:none !important; }
-.login .screen-reader-text { position:absolute !important; width:1px !important; height:1px !important; padding:0 !important; margin:-1px !important; overflow:hidden !important; clip:rect(0 0 0 0) !important; white-space:nowrap !important; border:0 !important; }
-*,*::before,*::after{box-sizing:border-box}
 
-html, body.login { height: 100%; }
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html {
+    min-height: 100%;
+    background: var(--if-shadow-deep);
+}
+
+html,
+body.login {
+    width: 100%;
+    min-height: 100%;
+}
+
 body.login {
     margin: 0;
-    font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-    line-height: 1.45;
-    color: var(--if-text);
-    background: #fff;
+    overflow-x: hidden;
+    color: var(--if-smoke);
+    background: var(--if-shadow-deep);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+.login h1,
+.login #backtoblog,
+.login #nav,
+body.login .privacy-policy-page-link {
+    display: none !important;
+}
+
+.login .screen-reader-text,
+.if-visually-hidden,
+.if-lang-left #if-language-switcher label {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0 0 0 0) !important;
+    clip-path: inset(50%) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
+.inkfire-inline-form #login,
+.inkfire-inline-form #language-switcher {
+    display: none !important;
 }
 
 /* ==========================================================================
-   Structure (Grid System)
+   Dark Prism canvas: intentionally restrained, not multi-coloured
    ========================================================================== */
+
 .if-full-bg {
-    width: 100vw;
-    min-height: 100vh;
-    margin-left: calc(50% - 50vw);
-    
-    /* Strict fallback logic */
-    background-image: url('inkfire_background.png'); 
-    background-image: var(--if-bg-image);
-    
-    background-size: cover;
-    background-position: center;
-    background-attachment: scroll;
+    position: relative;
+    isolation: isolate;
     display: grid;
     place-items: center;
-    padding: 16px;
-    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding: clamp(18px, 3.5vw, 48px);
+    overflow: hidden;
+
+    /* Requested background stack. */
+    background:
+        radial-gradient(circle at 10% 40%, rgba(251, 204, 191, 0.08), transparent 55%),
+        radial-gradient(circle at 90% 15%, rgba(23, 154, 214, 0.08), transparent 55%),
+        linear-gradient(180deg, #1a1c29 0%, #151622 100%);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow:
+        inset 0 0 18px rgba(0, 0, 0, 0.55),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12),
+        0 0 10px 5px rgba(0, 0, 0, 0.5);
 }
 
-/* Overlay */
-.if-full-bg::before {
+/* Decorative Inkfire mark used on the main site hero. It remains decorative,
+   but is now legible through the transparent account surface. */
+.if-full-bg::after {
     content: "";
     position: absolute;
-    top:0; left:0; right:0; bottom:0;
-    background: var(--if-bg-overlay);
-    opacity: 0;
-    pointer-events: none;
     z-index: 0;
-    transition: opacity 0.3s ease;
-}
-
-.if-shell {
-    width: 100%;
-    max-width: 1200px;
-    border-radius: 35px;
-    overflow: hidden;
-    background: #fff;
-    box-shadow: 0 10px 15px -3px rgba(0,0,0,.1), 0 4px 6px -4px rgba(0,0,0,.1);
-    display: grid;
-    grid-template-columns: 1fr 1.8fr;
-    grid-template-areas: 'left right';
-    z-index: 1;
-    position: relative;
-}
-
-.if-left { grid-area: left; }
-.if-right { grid-area: right; }
-
-@media (max-width:960px) {
-    .if-shell {
-        grid-template-columns: 1fr;
-        grid-template-areas: 'right' 'left';
-    }
+    top: 50%;
+    right: clamp(-120px, -5vw, -44px);
+    width: min(58vw, 920px);
+    height: min(92vh, 980px);
+    transform: translateY(-50%);
+    pointer-events: none;
+    background-image: var(--if-bg-icon);
+    background-repeat: no-repeat;
+    background-position: center right;
+    background-size: contain;
+    opacity: 0.13;
+    filter: grayscale(1) brightness(1.9) contrast(0.88);
 }
 
 /* ==========================================================================
-   Right Column (Login Form Area)
+   Dark glass shell
    ========================================================================== */
-.if-right {
-    background: #fff;
+
+.if-shell {
+    position: relative;
+    z-index: 1;
     display: grid;
-    grid-template-rows: auto 1fr;
+    grid-template-columns: minmax(310px, 0.82fr) minmax(530px, 1.52fr);
+    grid-template-areas: "left right";
+    width: min(1220px, 100%);
+    min-height: min(760px, calc(100dvh - 64px));
+    overflow: hidden;
+    border: 1px solid transparent;
+    border-radius: var(--if-radius-shell);
+    background:
+        linear-gradient(145deg, rgba(29, 31, 49, 0.58), rgba(15, 18, 31, 0.42)) padding-box,
+        linear-gradient(135deg, rgba(255, 255, 255, 0.34), rgba(251, 204, 191, 0.18) 38%, rgba(7, 160, 121, 0.16) 70%, rgba(255, 255, 255, 0.09)) border-box;
+    box-shadow:
+        0 34px 90px rgba(0, 0, 0, 0.46),
+        0 12px 30px rgba(0, 0, 0, 0.22),
+        inset 0 1px 0 rgba(255, 255, 255, 0.14),
+        inset 0 -1px 0 rgba(7, 160, 121, 0.12);
+    -webkit-backdrop-filter: blur(18px) saturate(122%);
+    backdrop-filter: blur(18px) saturate(122%);
+}
+
+.if-shell::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    pointer-events: none;
+    border-radius: inherit;
+    box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.025);
+}
+
+.if-left {
+    grid-area: left;
+}
+
+.if-right {
+    grid-area: right;
+}
+
+/* ==========================================================================
+   Existing contact panel: content preserved, styling only
+   ========================================================================== */
+
+.if-left {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0;
+    min-width: 0;
+    padding: clamp(34px, 4.5vw, 54px) clamp(26px, 3.6vw, 42px);
+    z-index: 2;
+    color: var(--if-shadow-deep);
+    text-align: center;
+    border-right: 1px solid rgba(21, 22, 34, 0.08);
+    background:
+        radial-gradient(circle at 12% 8%, rgba(251, 204, 191, 0.28), transparent 36%),
+        radial-gradient(circle at 88% 16%, rgba(30, 78, 71, 0.06), transparent 34%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 246, 247, 0.98));
+    box-shadow:
+        18px 0 46px rgba(0, 0, 0, 0.18),
+        inset -1px 0 0 rgba(255, 255, 255, 0.75);
+}
+
+.if-left-content {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    justify-content: center;
+    width: 100%;
+    min-height: 0;
+}
+
+.if-left-block {
+    position: relative;
+    width: 100%;
+    max-width: 330px;
+    margin: 0 auto;
+    padding: 18px 0;
+}
+
+.if-left-block:first-child {
+    padding-top: 0;
+}
+
+.if-left-block:last-child {
+    padding-bottom: 0;
+}
+
+.if-left-block + .if-left-block {
+    border-top: 0;
+}
+
+.if-icon {
+    display: block;
+    width: 58px;
+    height: 58px;
+    margin: 0 auto 18px;
+    object-fit: contain;
+    filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.26));
+}
+
+.if-left h3 {
+    margin: 0 0 13px;
+    color: var(--if-shadow-deep);
+    font-size: clamp(1.65rem, 2.2vw, 2rem);
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    line-height: 1.1;
+}
+
+.if-left h4 {
+    margin: 0 0 10px;
+    color: var(--if-pine);
+    font-size: 0.79rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    line-height: 1.3;
+    text-transform: uppercase;
+}
+
+.if-left p {
+    margin: 0;
+    color: #3f4352;
+    font-size: 0.93rem;
+    line-height: 1.55;
+}
+
+.if-accent {
+    color: var(--if-shadow-deep);
+    font-weight: 750;
+    text-decoration: underline;
+    text-decoration-color: rgba(30, 78, 71, 0.28);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+    transition: color var(--if-ease), text-decoration-color var(--if-ease);
+}
+
+.if-accent:hover,
+.if-accent:active {
+    color: var(--if-pine);
+    text-decoration-color: currentColor;
+}
+
+.if-socials {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 9px;
+}
+
+.if-socials a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    color: var(--if-shadow-deep);
+    border: 1px solid rgba(21, 22, 34, 0.16);
+    border-radius: 999px;
+    background: rgba(21, 22, 34, 0.035);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+    text-decoration: none;
+    transition: transform var(--if-ease), background var(--if-ease), border-color var(--if-ease), color var(--if-ease);
+}
+
+.if-socials a:hover,
+.if-socials a:active {
+    color: var(--if-white);
+    border-color: var(--if-pine);
+    background: var(--if-pine);
+    transform: translateY(-2px);
+}
+
+.if-social-icon {
+    display: block;
+    width: 18px;
+    height: 18px;
+}
+
+.if-legal .if-legal-small {
+    color: #676b78;
+    font-size: 0.75rem;
+    line-height: 1.55;
+}
+
+/* ==========================================================================
+   Main account area and new Inkfire lockup
+   ========================================================================== */
+
+.if-right {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    isolation: isolate;
+    background:
+        radial-gradient(circle at 100% 0%, rgba(255, 255, 255, 0.11), transparent 42%),
+        radial-gradient(circle at 100% 70%, rgba(7, 160, 121, 0.08), transparent 48%),
+        linear-gradient(160deg, rgba(24, 27, 42, 0.46), rgba(17, 20, 31, 0.22));
+    -webkit-backdrop-filter: blur(7px) saturate(114%);
+    backdrop-filter: blur(7px) saturate(114%);
+}
+
+.if-right::before {
+    content: "";
+    position: absolute;
+    z-index: 0;
+    inset: 0;
+    pointer-events: none;
+    background:
+        linear-gradient(90deg, rgba(255, 255, 255, 0.035), transparent 12%, transparent 88%, rgba(255, 255, 255, 0.06)),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent 24%);
+    box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.08);
+}
+
+.if-right > * {
+    position: relative;
+    z-index: 1;
 }
 
 .if-logo-wrap {
-    display: grid;
-    place-items: center;
-    padding: 40px 18px;
-}
-.if-logo {
-    width: clamp(180px, 38vw, 360px);
-    height: auto;
-}
-
-.if-teal {
-    background: var(--if-teal-dark);
-    padding: 38px 38px 30px;
-    display: grid;
-    gap: 20px;
-    align-content: start;
-    justify-items: stretch;
-}
-
-.if-cta-row {
     display: flex;
-    gap: 28px;
-    align-items: stretch;
+    align-items: center;
     justify-content: center;
-    flex-direction: column;
+    flex: 0 0 auto;
+    min-width: 0;
+    padding: clamp(46px, 5vw, 62px) clamp(34px, 4.5vw, 58px) clamp(20px, 2.5vw, 30px);
 }
-@media (min-width:961px) { .if-cta-row { flex-direction: row; } }
-.if-cta-cell { flex: 1 1 0; min-width: 0; display: flex; }
+
+.if-logo {
+    display: block;
+    width: clamp(132px, 11vw, 150px);
+    max-width: 100%;
+    height: auto;
+    filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.25));
+}
+
+/* Layout wrapper only. The visual surface belongs to the form card. */
+.if-teal {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 16px;
+    min-width: 0;
+    min-height: 0;
+    margin: 0 clamp(34px, 4.5vw, 58px) clamp(48px, 5vw, 64px);
+    padding: 0;
+    color: var(--if-smoke);
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.if-heading-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-width: 0;
+}
+
+.if-cta-row,
+.if-cta-cell {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+}
 
 .if-card {
     position: relative;
-    background: #fff;
-    border-radius: 25px;
-    padding: 35px;
-    box-shadow: 0 14px 24px -10px rgba(0,0,0,.15);
-    width: 100%;
     display: flex;
+    flex: 1 1 auto;
     flex-direction: column;
     align-items: stretch;
-    text-align: left;
-}
-
-/* THE PINK PILL TITLE */
-.if-card-title {
-    display: inline-block;
-    margin: 0 0 25px;
-    font-weight: 800;
-    font-size: 20px;
-    line-height: 1;
-    color: #1b1b1b;
-    background: var(--if-pill); /* #fbccbf */
-    padding: 8px 14px;
-    border-radius: 999px;
-    box-shadow: 0 6px 12px -8px rgba(0,0,0,.25);
-}
-
-/* Messages (Improved contrast for errors) */
-.message, .success, .error {
-    background-color: #fff;
-    border-left: 4px solid #7ad03a;
-    box-shadow: 0 1px 1px 0 rgba(0,0,0,.1);
-    padding: 12px;
-    margin-bottom: 20px;
-    color: #333 !important; /* Force dark text */
-}
-.message.info { border-color: #00a0d2; }
-.error { border-color: #b32d2e !important; } /* Darker red for accessibility */
-
-/* Form Elements */
-#if_card_loginform p, #if_lostpasswordform p, #if_resetpassform p, #if_registerform p, #if_confirm_email_form p {
-    margin: 0 0 12px;
-}
-#if_card_loginform label, #if_lostpasswordform label, #if_resetpassform label, #if_registerform label, #if_confirm_email_form label {
-    display: block;
-    font-weight: 600;
-    color: #223;
-    margin: 0 0 6px;
-}
-
-#if_card_loginform .input, #if_lostpasswordform .input, #if_resetpassform .input, #if_registerform .input, #if_confirm_email_form .input,
-#if_card_loginform input[type="text"], #if_card_loginform input[type="password"],
-#if_lostpasswordform input[type="text"], #if_lostpasswordform input[type="email"],
-#if_resetpassform input[type="password"],
-#if_registerform input[type="text"], #if_registerform input[type="email"] {
     width: 100%;
+    min-width: 0;
+    padding: clamp(30px, 3.5vw, 40px);
+    overflow: hidden;
+    color: var(--if-smoke);
+    text-align: left;
+    border: 1px solid rgba(255, 255, 255, 0.11);
+    border-top-color: rgba(255, 255, 255, 0.20);
+    border-radius: var(--if-radius-card);
+    background-color: rgba(28, 29, 45, 0.94);
+    background-image:
+        radial-gradient(circle at 8% 4%, rgba(251, 204, 191, 0.09), transparent 48%),
+        radial-gradient(circle at 96% 4%, rgba(23, 154, 214, 0.07), transparent 50%),
+        linear-gradient(155deg, rgba(31, 32, 49, 0.98) 0%, rgba(24, 26, 41, 0.97) 55%, rgba(18, 20, 32, 0.98) 100%);
+    box-shadow:
+        0 22px 58px rgba(0, 0, 0, 0.34),
+        inset 0 1px 0 rgba(255, 255, 255, 0.10),
+        inset 0 0 24px rgba(0, 0, 0, 0.18);
+    -webkit-backdrop-filter: blur(18px) saturate(112%);
+    backdrop-filter: blur(18px) saturate(112%);
+}
+
+.if-card-title {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: fit-content;
+    max-width: 100%;
+    min-height: 46px;
+    margin: 0;
+    padding: 9px 20px;
+    color: var(--if-ink);
     border-radius: 999px;
-    border: 1px solid #d7dee0;
-    background: #fff;
-    padding: 14px 16px;
-    font-size: 16px;
-    color: #111;
+    background: var(--if-almond);
+    box-shadow: 0 7px 18px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.42);
+    font-size: clamp(1.12rem, 1.3vw, 1.35rem);
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    line-height: 1.25;
+    text-align: center;
 }
 
-/* Input Focus */
+.if-card p {
+    color: var(--if-muted);
+}
+
+.if-card a:not(.button-primary) {
+    color: var(--if-almond-strong);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+}
+
+.if-card a:not(.button-primary):hover,
+.if-card a:not(.button-primary):active {
+    color: var(--if-white);
+}
+
+/* ==========================================================================
+   Notifications and authentication feedback
+   ========================================================================== */
+
+.if-card .message,
+.if-card .success,
+.if-card .error,
+.if-card #login_error,
+.if-card .notice {
+    width: 100%;
+    margin: 0 0 20px;
+    padding: 16px 18px;
+    color: var(--if-white) !important;
+    border: 1px solid rgba(226, 114, 0, 0.42);
+    border-top-color: rgba(255, 255, 255, 0.28);
+    border-radius: 22px;
+    background-color: var(--if-notice-base);
+    background-image:
+        linear-gradient(180deg, rgba(21, 22, 34, 0.32), rgba(21, 22, 34, 0.32)),
+        linear-gradient(135deg, rgba(226, 114, 0, 0.55) 0%, rgba(219, 88, 68, 0.60) 100%);
+    box-shadow:
+        0 8px 20px rgba(0, 0, 0, 0.25),
+        inset 0 0 20px rgba(226, 114, 0, 0.10),
+        inset 0 1px 0 rgba(255, 255, 255, 0.10);
+    -webkit-backdrop-filter: blur(12px) saturate(112%);
+    backdrop-filter: blur(12px) saturate(112%);
+    font-size: 0.95rem;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+.if-card .error,
+.if-card #login_error,
+.if-card .notice-error {
+    color: var(--if-white) !important;
+    border-color: rgba(226, 114, 0, 0.46) !important;
+}
+
+.if-card .message a,
+.if-card .success a,
+.if-card .error a,
+.if-card #login_error a,
+.if-card .notice a {
+    color: var(--if-white) !important;
+    font-weight: 800;
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+}
+
+.if-card #login_error:focus,
+.if-card .error:focus,
+.if-card .notice-error:focus {
+    outline: 3px solid var(--if-white);
+    outline-offset: 3px;
+}
+
+.if-card .message p,
+.if-card .success p,
+.if-card .error p,
+.if-card .notice p,
+.if-card .message ul,
+.if-card .error ul {
+    margin: 0;
+    color: inherit !important;
+}
+
+.if-card .login-error-list {
+    margin: 0;
+    padding-left: 1.25rem;
+}
+
+.if-card .login-error-list li + li {
+    margin-top: 0.45rem;
+}
+
+/* ==========================================================================
+   Forms and controls
+   ========================================================================== */
+
+.if-card form {
+    width: 100%;
+    margin: 0;
+}
+
+.if-card form > p,
+#if_card_loginform p,
+#if_lostpasswordform p,
+#if_resetpassform p,
+#if_registerform p,
+#if_confirm_email_form p {
+    width: 100%;
+    margin: 0 0 17px;
+}
+
+.if-card form label,
+#if_card_loginform label,
+#if_lostpasswordform label,
+#if_resetpassform label,
+#if_registerform label,
+#if_confirm_email_form label {
+    display: inline-block;
+    margin: 0 0 7px;
+    color: var(--if-smoke);
+    font-size: 0.91rem;
+    font-weight: 720;
+    line-height: 1.35;
+}
+
+.if-card .input,
+.if-card input[type="text"],
+.if-card input[type="email"],
+.if-card input[type="password"],
+.if-card input[type="url"],
+.if-card select,
+.if-card textarea {
+    display: block;
+    width: 100%;
+    max-width: none;
+    min-height: 54px;
+    margin: 0;
+    padding: 12px 15px;
+    color: var(--if-ink);
+    border: 2px solid #d7d9df;
+    border-radius: var(--if-radius-control);
+    outline: none;
+    background: var(--if-white);
+    box-shadow: inset 0 1px 2px rgba(21, 22, 34, 0.07);
+    font: inherit;
+    font-size: 1rem;
+    line-height: 1.25;
+    transition: border-color var(--if-ease), box-shadow var(--if-ease), transform var(--if-ease);
+}
+
+.if-card textarea {
+    min-height: 110px;
+    resize: vertical;
+}
+
+.if-card .input:hover,
+.if-card input[type="text"]:hover,
+.if-card input[type="email"]:hover,
+.if-card input[type="password"]:hover {
+    border-color: #aeb3bd;
+}
+
+.if-card .input:focus,
+.if-card input[type="text"]:focus,
+.if-card input[type="email"]:focus,
+.if-card input[type="password"]:focus,
+.if-card input[type="url"]:focus,
+.if-card select:focus,
+.if-card textarea:focus {
+    border-color: var(--if-almond);
+    box-shadow: 0 0 0 4px rgba(251, 204, 191, 0.30);
+}
+
+.if-card input:-webkit-autofill,
+.if-card input:-webkit-autofill:hover,
+.if-card input:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--if-ink);
+    -webkit-box-shadow: 0 0 0 1000px var(--if-white) inset;
+    caret-color: var(--if-ink);
+}
+
 .if-input-focused label {
-    color: var(--if-teal);
-    transform: translateY(-2px);
-    transition: all var(--if-transition);
+    color: var(--if-almond);
 }
 
-#if_card_loginform .input:focus, #if_lostpasswordform .input:focus, #if_resetpassform .input:focus, #if_registerform .input:focus, #if_confirm_email_form .input:focus {
-    border-color: #179AD6;
-    box-shadow: 0 0 0 3px rgba(23,154,214,.25);
-    outline: 0;
+.if-input-invalid .input,
+.if-card input[aria-invalid="true"] {
+    border-color: #bd3026;
+    box-shadow: 0 0 0 4px rgba(189, 48, 38, 0.22);
 }
 
 #if_card_loginform .forgetmenot {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-top: 4px;
+    min-height: 44px;
+    margin: 2px 0 5px;
 }
+
 #if_card_loginform .forgetmenot label {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
     margin: 0;
-    font-weight: 500;
-    color: #334;
-}
-
-/* Password Strength Meter */
-.if-password-strength-meter { margin: 0.5rem 0 1rem; }
-.strength-bar { height: 4px; width: 0%; border-radius: 2px; transition: width 0.3s ease, background-color 0.3s ease; }
-.strength-text { font-size: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem); margin-top: 0.25rem; color: var(--if-text); opacity: 0.8; }
-
-.strength-bar[style*="0%"] { background-color: #e00 !important; }
-.strength-bar[style*="20%"] { background-color: #e70 !important; }
-.strength-bar[style*="40%"] { background-color: #ea0 !important; }
-.strength-bar[style*="60%"] { background-color: #8c0 !important; }
-.strength-bar[style*="80%"] { background-color: #0a0 !important; }
-.strength-bar[style*="100%"] { background-color: #0a0 !important; }
-
-/* Buttons */
-.wp-core-ui #if_card_loginform .button-primary,
-.wp-core-ui #if_lostpasswordform .button-primary,
-.wp-core-ui #if_resetpassform .button-primary,
-.wp-core-ui #if_registerform .button-primary,
-.wp-core-ui #if_confirm_email_form .button-primary {
     cursor: pointer;
-    background: var(--if-pill); /* #fbccbf */
-    color: #1b1b1b;
-    border: none;
-    border-radius: 999px;
-    padding: 12px 22px;
-    font-weight: 700;
-    font-size: 16px;
-    box-shadow: 0 12px 18px -10px rgba(0,0,0,.2);
-    text-shadow: none;
-    transition: background .18s ease, color .18s ease, transform .06s ease;
 }
-/* Enhanced hover contrast for buttons */
-.wp-core-ui #if_card_loginform .button-primary:hover, .wp-core-ui #if_lostpasswordform .button-primary:hover,
-.wp-core-ui #if_resetpassform .button-primary:hover, .wp-core-ui #if_registerform .button-primary:hover,
-.wp-core-ui #if_confirm_email_form .button-primary:hover,
-.wp-core-ui #if_card_loginform .button-primary:active, .wp-core-ui #if_lostpasswordform .button-primary:active,
-.wp-core-ui #if_resetpassform .button-primary:active, .wp-core-ui #if_registerform .button-primary:active,
-.wp-core-ui #if_confirm_email_form .button-primary:active {
-    background: #0a4a50 !important; /* Darker teal for better contrast */
-    color: #fff !important;
+
+.if-card input[type="checkbox"] {
+    position: relative;
+    flex: 0 0 24px;
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    margin: 0;
+    border: 2px solid #cfd2da;
+    border-radius: 6px;
+    appearance: none;
+    background: var(--if-white);
+    cursor: pointer;
+}
+
+.if-card input[type="checkbox"]:checked {
+    border-color: var(--if-almond);
+    background: var(--if-almond);
+}
+
+.if-card input[type="checkbox"]:checked::after {
+    content: "";
+    position: absolute;
+    left: 7px;
+    top: 3px;
+    width: 6px;
+    height: 11px;
+    border: solid var(--if-ink);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.if-card input[type="checkbox"]:focus-visible {
+    outline: 3px solid var(--if-focus);
+    outline-offset: 3px;
+}
+
+.if-card .submit,
+#if_card_loginform .login-submit {
+    margin: 21px 0 0 !important;
+    padding: 0;
+}
+
+.wp-core-ui .if-card .button-primary,
+.if-card .button-primary {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 52px;
+    padding: 12px 20px !important;
+    color: var(--if-ink) !important;
+    border: 2px solid var(--if-almond) !important;
+    border-radius: 999px !important;
+    outline: none;
+    background: var(--if-almond) !important;
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.17), inset 0 1px 0 rgba(255, 255, 255, 0.46) !important;
+    font: inherit;
+    font-size: 0.98rem !important;
+    font-weight: 800 !important;
+    line-height: 1.2 !important;
+    text-decoration: none !important;
+    text-shadow: none !important;
+    cursor: pointer;
+    transition: transform var(--if-ease), background var(--if-ease), border-color var(--if-ease), box-shadow var(--if-ease);
+}
+
+.wp-core-ui .if-card .button-primary:hover,
+.wp-core-ui .if-card .button-primary:active,
+.if-card .button-primary:hover,
+.if-card .button-primary:active {
+    color: var(--if-ink) !important;
+    border-color: var(--if-white) !important;
+    background: var(--if-white) !important;
+    box-shadow: 0 13px 26px rgba(0, 0, 0, 0.22) !important;
     transform: translateY(-1px);
 }
-.wp-core-ui #if_card_loginform .button-primary:focus-visible, .wp-core-ui #if_lostpasswordform .button-primary:focus-visible,
-.wp-core-ui #if_resetpassform .button-primary:focus-visible, .wp-core-ui #if_registerform .button-primary:focus-visible,
-.wp-core-ui #if_confirm_email_form .button-primary:focus-visible {
-    outline: 3px solid var(--if-orange);
-    outline-offset: 2px;
+
+.wp-core-ui .if-card .button-primary:focus-visible,
+.if-card .button-primary:focus-visible {
+    outline: 3px solid var(--if-focus) !important;
+    outline-offset: 4px !important;
 }
 
-/* Loading Spinner */
-.button-primary:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-    position: relative;
+.if-card form[aria-busy="true"] .button-primary,
+.if-card .button-primary[aria-disabled="true"] {
+    opacity: 0.74;
+    cursor: progress;
+    transform: none;
 }
-.button-primary:disabled::after {
-    content: '';
-    position: absolute;
-    top: 50%; left: 50%;
-    width: 1em; height: 1em;
-    margin: -0.5em 0 0 -0.5em;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    border-top-color: white;
-    border-radius: 50%;
-    animation: ifls-spin 1s linear infinite;
-}
-@keyframes ifls-spin { to { transform: rotate(360deg); } }
 
-/* Aux Links */
+/* Password strength meter */
+.if-password-strength-meter {
+    margin: -5px 0 18px;
+}
+
+.strength-bar {
+    width: 0;
+    height: 6px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #9da3ae;
+    transition: width 220ms ease, background-color 220ms ease;
+}
+
+.strength-text {
+    min-height: 1.3em;
+    margin-top: 7px;
+    color: var(--if-muted);
+    font-size: 0.82rem;
+}
+
+/* ==========================================================================
+   Auxiliary navigation
+   ========================================================================== */
+
 .if-aux {
-    position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #fff;
+    color: var(--if-muted);
 }
+
 .if-aux-links {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
+    align-items: stretch;
     justify-content: center;
-    gap: 12px;
+    gap: 9px;
+    width: 100%;
 }
+
 .if-aux-link {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 7px 17px;
-    border-radius: 14px;
-    background: rgba(255,255,255,.12);
-    color: #fff;
+    min-height: 44px;
+    padding: 9px 14px;
+    color: var(--if-white);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.055);
+    font-size: 0.79rem;
+    font-weight: 700;
+    line-height: 1.25;
+    text-align: center;
     text-decoration: none;
-    transition: background .18s ease, color .18s ease, transform .06s ease;
+    transition: color var(--if-ease), border-color var(--if-ease), background var(--if-ease), transform var(--if-ease);
 }
-.if-aux-link:hover, .if-aux-link:active {
-    background: var(--if-orange);
-    color: #fff;
+
+.if-aux-link:hover,
+.if-aux-link:active {
+    color: var(--if-ink);
+    border-color: var(--if-almond);
+    background: var(--if-almond);
     transform: translateY(-1px);
 }
-.if-aux-link:focus-visible {
-    outline: 3px solid #F4C946;
-    outline-offset: 2px;
-}
-.if-aux-links .sep { display: none; }
 
-/* ==========================================================================
-   Left Column (Contact/Brand Area)
-   ========================================================================== */
-.if-left {
-    background: var(--if-teal);
-    color: #fff;
-    padding: 48px 28px;
-    display: grid;
-    align-content: center;
-    justify-items: center;
-    gap: 25px;
+.if-aux-links .sep {
+    display: none;
 }
 
-.if-left-block {
-    max-width: 360px;
-    text-align: center;
-}
-.if-icon {
-    width: 64px;
-    height: 64px;
-    display: block;
-    margin: 0 auto 12px;
-}
-.if-left h3 {
-    color: var(--if-pill);
-    margin: 0 0 10px;
-    font-size: clamp(20px, 2.2vw, 28px);
-    font-weight: 800;
-}
-.if-left h4 {
-    color: var(--if-pill);
-    margin: 0 0 8px;
-    font-size: clamp(16px, 1.7vw, 18px);
-    font-weight: 800;
-}
-.if-accent {
-    color: #ffffff;
-    text-decoration: none;
-    font-weight: 700;
-}
-.if-socials {
+/* Language selector sits at the bottom of the contact panel. */
+.if-language-row {
     display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    justify-content: center;
-}
-.if-socials a {
-    color: #fff;
-    display: inline-flex;
-    text-decoration: none;
+    flex: 0 0 auto;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
-    border-radius: 999px;
-    background: rgba(255,255,255,.14);
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,.18);
-}
-/* Enhanced focus states for social icons */
-.if-socials a:focus-visible {
-    outline: 3px solid #F4C946;
-    outline-offset: 3px;
-    outline-style: solid;
+    width: 100%;
+    margin-top: 14px;
+    padding-top: 10px;
 }
 
-.if-legal {
-    font-size: 14px;
-    line-height: 1.45;
-    color: #eaf5f4;
-}
-.if-legal-small {
-    opacity: .95;
-    margin: 2px 0 0;
+.if-lang-left {
+    width: min(100%, 330px);
+    margin-inline: auto;
 }
 
 .if-lang-left #if-language-switcher {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
-    justify-content: center;
-    gap: 8px;
-    margin: 0 auto;
+    gap: 9px;
+    width: 100%;
+    margin: 0;
 }
-.if-lang-left #if-language-switcher label { display: none; }
-.if-lang-left #if-language-switcher select {
-    border-radius: 10px;
-    border: 1px solid rgba(255,255,255,.35);
-    background: #0f4c50;
-    color: #fff;
-    padding: 6px 8px;
-}
+
+.if-lang-left #if-language-switcher select,
 .if-lang-left #if-language-switcher input[type="submit"] {
-    border-radius: 8px;
-    border: 1px solid rgba(255,255,255,.35);
-    background: #0f4c50;
-    color: #fff;
-    padding: 6px 10px;
+    min-height: 44px;
+    color: var(--if-white);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 12px;
+    background-color: rgba(36, 38, 53, 0.88);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    font: inherit;
 }
 
-@media (max-width:960px) {
-    .if-left { padding: 36px 20px; }
-    .if-teal { padding: 30px 24px 24px; }
-    .if-card { padding: 28px; }
-    .if-card-title { margin-bottom: 12px; padding: 7px 12px; }
-}
-@media (max-width:520px) {
-    .if-logo-wrap { padding: 28px 14px; }
-    .if-card { padding: 20px; }
-    .if-aux-links { gap: 10px; }
-    .if-aux-link { width: 100%; max-width: 420px; }
+.if-lang-left #if-language-switcher select {
+    width: 100%;
+    min-width: 0;
+    padding: 8px 34px 8px 11px;
 }
 
-/* Fix Issue 5: Ultra-Mobile Support */
-@media (max-width: 360px) {
-    .if-aux-link { padding: 6px 12px !important; font-size: 0.9em !important; }
-    .if-card { padding: 16px !important; }
-    .if-card-title { font-size: 16px !important; padding: 6px 10px !important; }
+.if-lang-left #if-language-switcher option {
+    color: var(--if-ink);
+    background: var(--if-white);
 }
 
-.inkfire-inline-form #language-switcher { display: none !important; }
-.inkfire-inline-form #login { display: none !important; }
+.if-lang-left #if-language-switcher input[type="submit"] {
+    padding: 8px 14px;
+    cursor: pointer;
+}
 
-/* Reduced motion support */
+/* Language selector follows the light contact panel. */
+.if-left .if-language-row {
+    color: var(--if-shadow-deep);
+}
+
+.if-left .if-lang-left #if-language-switcher select {
+    color: var(--if-shadow-deep);
+    border-color: rgba(21, 22, 34, 0.18);
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 4px 12px rgba(21, 22, 34, 0.06);
+}
+
+.if-left .if-lang-left #if-language-switcher input[type="submit"] {
+    color: var(--if-white);
+    border-color: var(--if-pine);
+    background: var(--if-pine);
+    box-shadow: 0 6px 14px rgba(30, 78, 71, 0.18);
+}
+
+/* ==========================================================================
+   Focus treatment
+   ========================================================================== */
+
+.if-accent:focus-visible,
+.if-socials a:focus-visible,
+.if-aux-link:focus-visible,
+.if-lang-left select:focus-visible,
+.if-lang-left input:focus-visible,
+.if-card a:focus-visible {
+    outline: 3px solid var(--if-focus);
+    outline-offset: 3px;
+}
+
+/* The contact panel is light, so use the darker Pine focus ring there. */
+.if-left .if-accent:focus-visible,
+.if-left .if-socials a:focus-visible,
+.if-left .if-lang-left select:focus-visible,
+.if-left .if-lang-left input:focus-visible {
+    outline-color: var(--if-pine);
+}
+
+/* ==========================================================================
+   Responsive layout
+   ========================================================================== */
+
+@media (max-width: 980px) {
+    .if-full-bg {
+        place-items: start center;
+    }
+
+    .if-shell {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas:
+            "right"
+            "left";
+        width: min(780px, 100%);
+        min-height: 0;
+    }
+
+    .if-left {
+        display: flex;
+        padding: 36px clamp(24px, 5vw, 42px);
+        border-top: 0;
+        border-right: 0;
+    }
+
+    .if-left-content {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-items: start;
+        gap: 0 28px;
+    }
+
+    .if-left-block {
+        max-width: none;
+    }
+
+    .if-left-block:first-child,
+    .if-left-block.if-legal {
+        grid-column: 1 / -1;
+    }
+
+    .if-left-block:nth-child(2),
+    .if-left-block:nth-child(3) {
+        border-top: 0;
+    }
+
+    .if-teal {
+        margin-inline: clamp(24px, 4.5vw, 38px);
+        margin-bottom: clamp(40px, 5vw, 52px);
+    }
+}
+
+@media (max-width: 680px) {
+    .if-full-bg {
+        display: block;
+        padding: 0;
+        border: 0;
+        box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.55);
+    }
+
+    .if-shell {
+        width: 100%;
+        min-height: 100vh;
+        min-height: 100dvh;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    .if-logo-wrap {
+        padding: 46px 20px 18px;
+    }
+
+    .if-logo {
+        width: min(150px, 50vw);
+    }
+
+    .if-teal {
+        gap: 16px;
+        margin: 0 14px 42px;
+        padding: 0;
+        border-radius: 0;
+    }
+
+    .if-card {
+        padding: 28px 22px;
+        border-radius: 30px;
+    }
+
+    .if-card-title {
+        min-height: 44px;
+        margin: 0;
+        padding-inline: 17px;
+        font-size: clamp(1.05rem, 4.8vw, 1.28rem);
+    }
+
+    .if-aux-links {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .if-aux-link {
+        width: 100%;
+        border-radius: 14px;
+    }
+
+    .if-left {
+        display: flex;
+        padding: 34px 22px 30px;
+    }
+
+    .if-left-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+    }
+
+    .if-left-block,
+    .if-left-block:first-child,
+    .if-left-block.if-legal {
+        width: 100%;
+        max-width: 360px;
+    }
+
+    .if-left-block + .if-left-block {
+        border-top: 0;
+    }
+
+    .if-language-row {
+        justify-content: center;
+        margin-top: 12px;
+        padding-top: 8px;
+    }
+
+    .if-lang-left {
+        width: min(100%, 360px);
+    }
+
+    .if-icon {
+        width: 54px;
+        height: 54px;
+    }
+}
+
+@media (max-width: 420px) {
+    .if-logo-wrap {
+        padding-inline: 16px;
+    }
+
+    .if-teal {
+        margin-inline: 10px;
+        padding: 0;
+        border-radius: 0;
+    }
+
+    .if-card {
+        padding-inline: 18px;
+        border-radius: 26px;
+    }
+
+    .if-aux-links {
+        grid-template-columns: 1fr;
+    }
+
+    .if-left {
+        padding-inline: 19px;
+    }
+
+    .if-lang-left #if-language-switcher {
+        grid-template-columns: 1fr;
+        align-items: stretch;
+    }
+
+    .if-lang-left #if-language-switcher input[type="submit"] {
+        width: 100%;
+    }
+}
+
+/* Short-height laptop support keeps the full form visible at common sizes. */
+@media (min-width: 981px) and (max-height: 900px) {
+    .if-full-bg {
+        padding-block: 16px;
+    }
+
+    .if-shell {
+        min-height: 0;
+    }
+
+    .if-left {
+        padding-block: 22px;
+    }
+
+    .if-left-block {
+        padding-block: 11px;
+    }
+
+    .if-icon {
+        width: 46px;
+        height: 46px;
+        margin-bottom: 10px;
+    }
+
+    .if-left h3 {
+        margin-bottom: 8px;
+        font-size: 1.43rem;
+    }
+
+    .if-left h4 {
+        margin-bottom: 6px;
+        font-size: 0.7rem;
+    }
+
+    .if-left p {
+        font-size: 0.81rem;
+        line-height: 1.4;
+    }
+
+    .if-socials a {
+        width: 40px;
+        height: 40px;
+    }
+
+    .if-logo-wrap {
+        padding: 40px 34px 14px;
+    }
+
+    .if-logo {
+        width: clamp(132px, 11vw, 150px);
+    }
+
+    .if-teal {
+        gap: 10px;
+        margin-bottom: 34px;
+        padding: 0;
+        border-radius: 0;
+    }
+
+    .if-card {
+        padding: 24px 30px;
+        border-radius: 30px;
+    }
+
+    .if-card-title {
+        min-height: 40px;
+        margin: 0;
+        padding-block: 7px;
+        font-size: 1.05rem;
+    }
+
+    .if-card form > p,
+    #if_card_loginform p,
+    #if_lostpasswordform p,
+    #if_resetpassform p,
+    #if_registerform p,
+    #if_confirm_email_form p {
+        margin-bottom: 11px;
+    }
+
+    .if-card form label {
+        margin-bottom: 5px;
+        font-size: 0.82rem;
+    }
+
+    .if-card .input,
+    .if-card input[type="text"],
+    .if-card input[type="email"],
+    .if-card input[type="password"],
+    .if-card input[type="url"],
+    .if-card select,
+    .if-card textarea {
+        min-height: 46px;
+        padding-block: 9px;
+    }
+
+    .if-card .submit,
+    #if_card_loginform .login-submit {
+        margin-top: 13px !important;
+    }
+
+    .wp-core-ui .if-card .button-primary,
+    .if-card .button-primary {
+        min-height: 46px;
+        padding-block: 9px !important;
+    }
+
+    .if-aux-link {
+        min-height: 40px;
+        padding-block: 7px;
+        font-size: 0.72rem;
+    }
+
+    .if-language-row {
+        padding-top: 2px;
+    }
+
+    .if-lang-left #if-language-switcher select,
+    .if-lang-left #if-language-switcher input[type="submit"] {
+        min-height: 40px;
+        font-size: 0.78rem;
+    }
+}
+
+/* ==========================================================================
+   Accessibility preferences and resilient fallbacks
+   ========================================================================== */
+
 @media (prefers-reduced-motion: reduce) {
-    * {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
     }
-    .button-primary:disabled::after {
-        animation: none !important;
+}
+
+@media (forced-colors: active) {
+    .if-full-bg::after {
+        display: none;
+    }
+
+    .if-shell,
+    .if-left,
+    .if-teal,
+    .if-card,
+    .if-card .message,
+    .if-card .error,
+    .if-aux-link,
+    .if-socials a {
+        border: 1px solid CanvasText;
+    }
+
+    .if-card-title,
+    .if-card .button-primary {
+        border: 2px solid ButtonText !important;
+    }
+}
+
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+    .if-shell {
+        background: #171926;
+    }
+
+    .if-card {
+        background-color: #1e4e47;
     }
 }
 
 /* ==========================================================================
-   Admin Session Timeout Modal
+   WordPress admin session timeout modal
    ========================================================================== */
+
+#wp-auth-check-wrap #wp-auth-check {
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 22px;
+    background: var(--if-shadow-deep);
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
+}
+
+#wp-auth-check-form {
+    color: var(--if-smoke);
+    background: var(--if-shadow-deep);
+}
+
 #wp-auth-check-form .input,
 #wp-auth-check-form input[type="text"],
 #wp-auth-check-form input[type="password"] {
-    width: 100%;
-    border-radius: 999px !important;
-    border: 1px solid #d7dee0 !important;
-    background: #fff !important;
-    padding: 14px 16px !important;
-    font-size: 16px !important;
-    color: #111 !important;
-    margin-bottom: 12px;
+    min-height: 46px;
+    color: var(--if-ink);
+    border: 2px solid #d7d9df;
+    border-radius: 12px;
+    background: var(--if-white);
+    box-shadow: none;
 }
+
 #wp-auth-check-form .input:focus {
-    border-color: #179AD6 !important;
-    box-shadow: 0 0 0 3px rgba(23,154,214,.25) !important;
-    outline: 0 !important;
+    border-color: var(--if-almond);
+    box-shadow: 0 0 0 4px rgba(251, 204, 191, 0.30);
 }
+
 #wp-auth-check-form .button-primary {
-    cursor: pointer !important;
-    background: var(--if-pill) !important;
-    color: #1b1b1b !important;
-    border: none !important;
+    min-height: 44px;
+    color: var(--if-ink) !important;
+    border: 2px solid var(--if-almond) !important;
     border-radius: 999px !important;
-    padding: 10px 20px !important;
-    font-weight: 700 !important;
-    font-size: 15px !important;
-    box-shadow: 0 12px 18px -10px rgba(0,0,0,.2) !important;
+    background: var(--if-almond) !important;
+    box-shadow: none !important;
+    font-weight: 800;
     text-shadow: none !important;
-    height: auto !important;
-    line-height: normal !important;
-    float: none !important;
-    width: 100%;
-    transition: background .18s ease, color .18s ease, transform .06s ease !important;
 }
+
 #wp-auth-check-form .button-primary:hover,
 #wp-auth-check-form .button-primary:active {
-    background: var(--if-teal-dark) !important;
-    color: #fff !important;
-    transform: translateY(-1px) !important;
+    border-color: var(--if-white) !important;
+    background: var(--if-white) !important;
 }
+
 #wp-auth-check-form .button-primary:focus-visible {
-    outline: 3px solid var(--if-orange) !important;
-    outline-offset: 2px !important;
+    outline: 3px solid var(--if-focus) !important;
+    outline-offset: 3px !important;
 }
-#wp-auth-check-form .forgetmenot {
-    margin-top: 5px !important;
-    margin-bottom: 15px !important;
-}
+
 #wp-auth-check-form #login_error {
-    margin-bottom: 15px !important;
+    padding: 14px 16px;
+    color: var(--if-white);
+    border: 1px solid rgba(226, 114, 0, 0.42);
+    border-top-color: rgba(255, 255, 255, 0.28);
+    border-radius: 16px;
+    background-color: var(--if-notice-base);
+    background-image:
+        linear-gradient(180deg, rgba(21, 22, 34, 0.32), rgba(21, 22, 34, 0.32)),
+        linear-gradient(135deg, rgba(226, 114, 0, 0.55) 0%, rgba(219, 88, 68, 0.60) 100%);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25), inset 0 0 20px rgba(226, 114, 0, 0.10);
+}
+
+
+@media (max-width: 980px) {
+    .if-full-bg::after {
+        right: -20vw;
+        width: min(92vw, 720px);
+        height: 70vh;
+        opacity: 0.035;
+    }
 }

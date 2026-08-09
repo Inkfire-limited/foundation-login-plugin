@@ -3,11 +3,11 @@ Contributors: Inkfire
 Tags: login, branding, security, custom login
 Requires at least: 6.0
 Tested up to: 6.9
-Stable tag: 2.0.28
+Stable tag: 2.2.1
 Requires PHP: 7.4
 License: GPLv2 or later
 
-Enterprise-grade login customizer with automatic security, accessibility compliance, and zero maintenance.
+Enterprise-grade login customizer with automatic security, accessibility safeguards, authentication audit logging and operational diagnostics.
 
 == Description ==
 
@@ -19,9 +19,9 @@ Enterprise Security: Built-in brute force protection (limiting attempts by IP) a
 
 Strict Branding: Enforces Inkfire brand colors (Teal/Pink) and assets, preventing theme bleeds.
 
-Accessibility First: WCAG 2.1 AA compliant color contrast, focus states, and reduced motion support.
+Accessibility First: engineered toward WCAG 2.2 AA with robust contrast, visible focus, live-region feedback, touch-sized controls, reduced-motion support, and forced-colour fallbacks.
 
-Zero Configuration: Works out of the box. No settings page to clutter the admin.
+Operational Dashboard: Foundation > Inkfire Login shows recent logins/logouts, failed-login counters, lockouts, incidents and diagnostic health. Foundation > Login Diagnostics provides the full searchable log and settings. The branded login itself remains zero-configuration.
 
 Auto-Updates: Integrated GitHub update checker for seamless delivery from your private or public repository.
 
@@ -42,6 +42,76 @@ The plugin includes a self-hosted updater. When a new release is available on Gi
 This is a "Gold Master" plugin with hardcoded branding to ensure consistency across all client sites. To change branding, you must modify the assets/ folder and inkfire-login-styler.php in the source code.
 
 == Changelog ==
+
+= 2.2.1 =
+
+Fix: Constrained the Foundation dashboard grid so wide operational tables scroll inside their own regions instead of forcing the wp-admin document horizontally at narrower viewport widths.
+
+Fix: Added a complete server-rendered dashboard fallback for JavaScript-disabled sessions, keyboard focus hand-off for section navigation, a stateful theme toggle, and reduced-motion safeguards.
+
+Fix: Made Login Diagnostics responsive and labelled, added 50-row filtered event-log pagination, and require an explicit server-verified acknowledgement before an administrator can erase the full event log.
+
+Fix: Retained the successful WordPress password-reset confirmation in the custom login shell instead of presenting a second, now-invalid reset form.
+
+Design: Kept the contact panel and solid authentication card intact while making the surrounding account area translucent, strengthening the Inkfire watermark and adding a layered brand-tinted glass edge to the shell.
+
+Security: Connected reset-form CSRF enforcement to WordPress core's `validate_password_reset` action; a missing or invalid form nonce is now rejected before the password is changed.
+
+Security: Debug reports now expose only mail and DNS configuration status, not recipient addresses, raw DNS records or local mail-path details.
+
+= 2.2.0 =
+
+New: Replaced the former read-only Foundation admin shell with a working login operations dashboard. It now shows successful logins, failures, lockouts, incidents, recent authentication activity and diagnostic health.
+
+New: Failed-login management groups recent username/IP pairs, shows the current brute-force counter and allows an administrator to reset only that temporary counter without altering the WordPress account or deleting audit history.
+
+New: Added a privacy-safe downloadable debug report containing WordPress/PHP/plugin versions, active plugins, diagnostic state, cron state, authentication counts, incident metadata and mail/DNS configuration. It excludes event-row usernames, IPs, user agents, passwords, reset keys, cookies and nonces.
+
+New: Added a working dashboard mail-test action and direct links to the complete searchable event log and diagnostics settings. Dashboard CTAs now use explicit destinations; the login preview uses WordPress reauthentication mode so it can be viewed while already signed in.
+
+Design: Updated the public login screen with a 150px maximum Inkfire lockup, a light contact panel with dark brand text, a navy dark-glass authentication card, and the supplied Inkfire mark as a filtered low-contrast background watermark on the right. Contact details, social destinations, company details and authentication wording remain unchanged.
+
+= 2.1.4 =
+
+Design: Moved the existing WordPress language selector from the account side to the bottom of the left contact panel, without changing the selector, contact details, social links or authentication content.
+
+= 2.1.3 =
+
+Design: Centred each authentication title beneath the Inkfire lockup and outside the Pine Teal form surface.
+
+Design: Removed the visual divider lines from the contact panel while preserving its wording, contact details, opening times, social destinations and company information.
+
+Design: Moved the existing WordPress language selector to the bottom-right of the account side and increased breathing room above the logo and below the account controls.
+
+Design: Replaced the previous notification colours with an orange-and-coral glass treatment using white text. A restrained dark overlay keeps normal-size notification text at WCAG AA contrast while retaining the supplied palette.
+
+= 2.1.2 =
+
+Design: Rebuilt the account area as a single Pine Teal glass login card, removing the previous green outer wrapper and dark nested card. Account links remain outside the form surface.
+
+Design: Reduced the new Inkfire lockup and added 35-48px vertical breathing room around it across desktop and mobile layouts.
+
+Accessibility: Added server-rendered and JavaScript-enhanced live-region semantics for authentication notices, reliable error focus, non-destructive duplicate-submit protection, invalid-field state handling, and an accessible password-strength meter.
+
+Branding: Added the supplied transparent Inkfire WebP lockup and retained the existing side-panel content, contact details, social links, company details and language selector unchanged.
+
+= 2.1.0 =
+
+New: Authentication event log. Logins, failed logins, logouts, lockouts, registrations, password reset requests, completions and failures are recorded on this site, with a filterable viewer under Foundation > Login Diagnostics and an on-demand IP location lookup. Automatically pruned after 90 days. This data never leaves the site it was recorded on.
+
+New: Automatic incident reporting. When the plugin itself malfunctions - mail failures, a burst of blocked security checks, password resets failing with no successes, or a fatal error inside the plugin - an alert is emailed with the site domain and full technical context, and a copy is kept on the site even if that email could not be delivered. Alerts are deduplicated, so a broken site reports once rather than continuously.
+
+New: Mail diagnostics. A test-send button reporting exactly what the transport did, plus MX, SPF and DMARC inspection that flags the common failure where a domain's email is hosted externally but WordPress is sending through the local PHP mail() transport.
+
+New: Diagnostics settings screen for recipient, alert thresholds and retention. Constants in wp-config.php override and lock any field, and IFLS_DISABLE_DIAGNOSTICS switches the whole feature off.
+
+Fix: The login stylesheet is no longer loaded on every wp-admin page; it now loads only on this plugin's own screens.
+
+Fix: Replaced the Font Awesome CDN with inline SVG icons. The login page no longer makes any third-party request, and the social links gained the accessible names the icon font never had.
+
+Fix: Uninstall cleanup now works on sites using a persistent object cache, where transients never touch the options table and the previous direct SQL delete was a silent no-op.
+
+Fix: Removed a no-op login_footer hook that removed nothing.
 
 = 2.0.28 =
 

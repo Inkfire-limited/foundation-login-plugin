@@ -20,6 +20,7 @@
   color: var(--foundation-ink);
   font-family: "Aptos", "Avenir Next", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
   max-width: 1380px;
+  min-width: 0;
 }
 
 .foundation-app-root.is-dark {
@@ -49,6 +50,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.95fr);
   gap: 18px;
+  min-width: 0;
   padding: 28px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 28px;
@@ -250,11 +252,15 @@
 
 .foundation-shell-sections {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 18px;
+  min-width: 0;
 }
 
 .foundation-shell-panel {
+  min-width: 0;
   padding: 24px;
+  scroll-margin-top: 48px;
 }
 
 .foundation-shell-section__header {
@@ -284,6 +290,7 @@
 
 .foundation-admin-rich {
   color: var(--foundation-ink);
+  min-width: 0;
 }
 
 .foundation-admin-rich .fp-card {
@@ -416,8 +423,12 @@
 .foundation-shell-theme:focus-visible,
 .foundation-nav-button:focus-visible,
 .foundation-admin-rich .button:focus-visible,
-.foundation-admin-rich .fd-btn:focus-visible {
-  outline: none;
+.foundation-admin-rich .fd-btn:focus-visible,
+.foundation-admin-rich button:focus-visible,
+.foundation-admin-rich a:focus-visible,
+.foundation-shell-section:focus-visible {
+  outline: 3px solid var(--foundation-brand);
+  outline-offset: 2px;
   border-color: rgba(15, 118, 110, 0.48);
   box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.18);
 }
@@ -575,6 +586,10 @@
     flex-direction: column;
   }
 
+  .foundation-shell-section {
+    scroll-margin-top: 64px;
+  }
+
   .foundation-shell-metrics,
   .foundation-admin-rich .fp-stats-grid {
     grid-template-columns: 1fr;
@@ -585,5 +600,269 @@
     display: block;
     width: 100%;
     padding-right: 0;
+  }
+}
+
+/* ===========================================================================
+   Inkfire Login operations dashboard
+   ========================================================================== */
+
+.foundation-admin-rich .ifls-dashboard-grid,
+.foundation-admin-rich .ifls-health-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.foundation-admin-rich .ifls-ops-card,
+.foundation-admin-rich .ifls-health-item {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--foundation-border);
+  border-radius: 18px;
+  background: var(--foundation-surface-strong);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+}
+
+.foundation-admin-rich .ifls-ops-card h3 {
+  margin: 0 0 10px;
+  color: var(--foundation-ink);
+  font-size: 14px;
+}
+
+.foundation-admin-rich .ifls-ops-card p {
+  margin: 7px 0 0;
+  color: var(--foundation-muted);
+  line-height: 1.55;
+}
+
+.foundation-admin-rich .ifls-big-status {
+  margin: 0 !important;
+  color: var(--foundation-ink) !important;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.foundation-admin-rich .ifls-big-status.is-ok {
+  color: #0f766e !important;
+}
+
+.foundation-app-root.is-dark .foundation-admin-rich .ifls-big-status.is-ok {
+  color: #5eead4 !important;
+}
+
+.foundation-admin-rich .ifls-big-status.is-warn {
+  color: #b42318 !important;
+}
+
+.foundation-app-root.is-dark .foundation-admin-rich .ifls-big-status.is-warn {
+  color: #fda29b !important;
+}
+
+.foundation-admin-rich .ifls-quick-actions,
+.foundation-admin-rich .ifls-inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.foundation-admin-rich .ifls-quick-actions {
+  margin-top: 18px;
+}
+
+.foundation-admin-rich .ifls-quick-actions form,
+.foundation-admin-rich .ifls-inline-actions form {
+  margin: 0;
+}
+
+.foundation-admin-rich .ifls-table-wrap {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--foundation-border);
+  border-radius: 16px;
+  background: var(--foundation-surface-strong);
+}
+
+.foundation-admin-rich .ifls-dashboard-table {
+  min-width: 820px;
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+.foundation-admin-rich .ifls-dashboard-table th,
+.foundation-admin-rich .ifls-dashboard-table td {
+  padding: 12px 14px;
+  vertical-align: middle;
+  color: var(--foundation-ink);
+}
+
+.foundation-admin-rich .ifls-dashboard-table th {
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.foundation-admin-rich .ifls-dashboard-table code {
+  color: var(--foundation-ink);
+  background: var(--foundation-soft);
+}
+
+.foundation-admin-rich .ifls-event-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 4px 9px;
+  border: 1px solid var(--foundation-border);
+  border-radius: 999px;
+  background: var(--foundation-soft);
+  color: var(--foundation-ink);
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.foundation-admin-rich .ifls-event-chip.is-success {
+  border-color: rgba(15, 118, 110, 0.22);
+  background: rgba(15, 118, 110, 0.11);
+  color: #0f766e;
+}
+
+.foundation-admin-rich .ifls-event-chip.is-danger {
+  border-color: rgba(180, 35, 24, 0.22);
+  background: rgba(180, 35, 24, 0.10);
+  color: #b42318;
+}
+
+.foundation-admin-rich .ifls-event-chip.is-blocked {
+  border-color: rgba(226, 114, 0, 0.25);
+  background: rgba(226, 114, 0, 0.10);
+  color: #9a4d00;
+}
+
+.foundation-app-root.is-dark .foundation-admin-rich .ifls-event-chip.is-success {
+  color: #5eead4;
+}
+
+.foundation-app-root.is-dark .foundation-admin-rich .ifls-event-chip.is-danger {
+  color: #fda29b;
+}
+
+.foundation-app-root.is-dark .foundation-admin-rich .ifls-event-chip.is-blocked {
+  color: #fdba74;
+}
+
+.foundation-admin-rich .ifls-health-item {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.foundation-admin-rich .ifls-health-item span {
+  color: var(--foundation-muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.foundation-admin-rich .ifls-health-item strong {
+  overflow-wrap: anywhere;
+  color: var(--foundation-ink);
+  font-size: 1rem;
+}
+
+.foundation-admin-rich .ifls-health-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px !important;
+}
+
+.ifls-diagnostics-wrap {
+  max-width: 1380px;
+}
+
+.ifls-diagnostics-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.ifls-diagnostics-filter select,
+.ifls-diagnostics-filter input[type="search"] {
+  min-height: 40px;
+}
+
+.ifls-diagnostics-table-wrap {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ifls-diagnostics-table-wrap > .widefat {
+  min-width: 720px;
+  margin: 0;
+}
+
+.ifls-diagnostics-confirmation {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 12px 0 0;
+}
+
+.foundation-admin-rich .notice.inline {
+  margin: 0 0 16px;
+}
+
+.foundation-admin-rich .button,
+.foundation-admin-rich button.button {
+  min-height: 40px;
+}
+
+.foundation-admin-rich .button-small,
+.foundation-admin-rich button.button-small {
+  min-height: 34px;
+  padding: 4px 10px;
+}
+
+@media (max-width: 1100px) {
+  .foundation-admin-rich .ifls-dashboard-grid,
+  .foundation-admin-rich .ifls-health-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .foundation-admin-rich .ifls-dashboard-grid,
+  .foundation-admin-rich .ifls-health-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ifls-diagnostics-filter {
+    align-items: stretch;
+  }
+
+  .ifls-diagnostics-filter select,
+  .ifls-diagnostics-filter input[type="search"] {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .foundation-app-root *,
+  .foundation-app-root *::before,
+  .foundation-app-root *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }
