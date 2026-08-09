@@ -10,7 +10,7 @@ Part of the Foundation plugin series by Inkfire Limited.
 
 | | |
 |---|---|
-| Current version | 2.2.2 |
+| Current version | 2.2.3 |
 | Requires WordPress | 6.0+ |
 | Tested up to | 6.9 |
 | Requires PHP | 7.4+ |
@@ -83,8 +83,7 @@ plugin. The code contains no credentials or client data.
 
 ## Source of truth
 
-v2.2.1 is the published baseline. This v2.2.2 branch refines the login palette and must
-pass its release gate before it is offered to client sites.
+Each release is validated on Inkfire before it is offered to client sites through the GitHub update channel.
 
 ## Licence
 
