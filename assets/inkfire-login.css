@@ -1,5 +1,5 @@
 /**
- * Foundation - Inkfire Login v2.2.2
+ * Foundation - Inkfire Login v2.2.3
  * Dark-glass system aligned with Inkfire's animated hero palette.
  */
 
@@ -340,7 +340,8 @@ body.login .privacy-policy-page-link {
     overflow: hidden;
     color: #f2f2f2;
     border: 1px solid rgba(255, 255, 255, 0.10);
-    border-radius: 32px;
+    /* Meet the adjacent contact panel with a straight desktop seam. */
+    border-radius: 0 32px 32px 0;
     box-shadow:
         inset 0 0 14px rgba(0, 0, 0, 0.28),
         inset 0 1px 0 rgba(255, 255, 255, 0.13),
@@ -929,6 +930,11 @@ body.login .privacy-policy-page-link {
             "left";
         width: min(780px, 100%);
         min-height: 0;
+    }
+
+    /* The stacked account panel is a standalone surface below desktop. */
+    .if-right {
+        border-radius: 32px;
     }
 
     .if-left {
