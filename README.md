@@ -10,7 +10,7 @@ Part of the Foundation plugin series by Inkfire Limited.
 
 | | |
 |---|---|
-| Current version | 2.0.28 |
+| Current version | 2.2.1 |
 | Requires WordPress | 6.0+ |
 | Tested up to | 6.9 |
 | Requires PHP | 7.4+ |
@@ -35,7 +35,7 @@ alongside the existing one instead of updating it in place.
   pass-throughs for WooCommerce lost-password, WP-CLI, and admin-triggered reset flows.
 - **Accessibility** — WCAG 2.1 AA contrast, visible focus states, ARIA labelling, and
   reduced-motion support.
-- **Zero configuration** — no settings page. Activating the plugin is the whole setup.
+- **Operations dashboard** — Foundation → Inkfire Login provides audit activity, lockout insight, diagnostics and privacy-safe support reporting. The public login remains zero-configuration.
 
 ## Installation
 
@@ -83,8 +83,9 @@ plugin. The code contains no credentials or client data.
 
 ## Source of truth
 
-The live installation on inkfire.co.uk is authoritative. This repository was verified
-byte-identical to the live copy on 2026-08-05. If they diverge, reconcile from live.
+The audited v2.2.1 candidate was reconciled from the active Inkfire installation and
+validated locally on 2026-08-09. It is pending controlled staging rollout; do not treat
+this branch as deployed until the release gate is complete.
 
 ## Licence
 

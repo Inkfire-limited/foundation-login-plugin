@@ -53,10 +53,18 @@
       {
         type: 'button',
         className: 'foundation-nav-button',
+        'aria-controls': props.targetId,
         onClick: function () {
           var section = document.getElementById(props.targetId);
           if (section) {
-            section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            section.setAttribute('tabindex', '-1');
+            if (typeof section.focus === 'function') {
+              section.focus({ preventScroll: true });
+            }
+            section.scrollIntoView({
+              behavior: window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+              block: 'start'
+            });
             if (window.history && window.history.replaceState) {
               window.history.replaceState({}, '', '#' + props.targetId);
             }
@@ -154,6 +162,8 @@
               {
                 type: 'button',
                 className: 'foundation-shell-theme',
+                'aria-label': theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode',
+                'aria-pressed': theme === 'dark',
                 onClick: function () {
                   setTheme(theme === 'dark' ? 'light' : 'dark');
                 }
