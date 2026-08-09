@@ -1,0 +1,93 @@
+name: Release validation
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  release-validation:
+    name: Release validation (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php:
+          - "7.4"
+          - "8.2"
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+
+      - name: Verify release metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          plugin_version="$(sed -n 's/.*Version:[[:space:]]*\([^[:space:]*\).*/\1/p' inkfire-login-styler.php | head -n 1)"
+          readme_version="$(sed -n 's/^Stable tag:[[:space:]]*//p' README.txt | head -n 1)"
+          test -n "$plugin_version"
+          test "$plugin_version" = "$readme_version"
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            test "v$plugin_version" = "${{ github.ref_name }}"
+          fi
+
+      - name: Lint PHP
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r file; do
+            php -l "$file"
+          done < <(find . -type f -name '*.php' -not -path './.git/*')
+
+      - name: Check JavaScript syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check assets/inkfire-login.js
+          node --check assets/admin/foundation-admin-shell.js
+
+      - name: Build release asset
+        shell: bash
+        run: |
+          set -euo pipefail
+          package_root="dist/foundation-inkfire-login-styler"
+          mkdir -p "$package_root"
+          rsync -a --delete \
+            --exclude '.git' \
+            --exclude '.github' \
+            --exclude 'dist' \
+            --exclude 'docs' \
+            --exclude 'LICENSE' \
+            --exclude 'README.md' \
+            ./ "$package_root/"
+          (
+            cd dist
+            zip -qr foundation-inkfire-login-styler.zip foundation-inkfire-login-styler
+          )
+          unzip -t dist/foundation-inkfire-login-styler.zip
+          sha256sum dist/foundation-inkfire-login-styler.zip > dist/foundation-inkfire-login-styler.zip.sha256
+
+      - name: Upload release asset
+        if: matrix.php == '8.2'
+        uses: actions/upload-artifact@v4
+        with:
+          name: foundation-inkfire-login-styler
+          path: |
+            dist/foundation-inkfire-login-styler.zip
+            dist/foundation-inkfire-login-styler.zip.sha256
+          if-no-files-found: error
+          retention-days: 30
