@@ -36,6 +36,7 @@ class IFLS_Event_Log {
         'reset_completed',
         'reset_failed',
         'csrf_blocked',
+        'honeypot_blocked',
         'registration',
     ];
 
@@ -187,7 +188,7 @@ class IFLS_Event_Log {
             return 'success';
         }
 
-        if (in_array($event, ['csrf_blocked', 'lockout'], true)) {
+        if (in_array($event, ['csrf_blocked', 'honeypot_blocked', 'lockout'], true)) {
             return 'blocked';
         }
 

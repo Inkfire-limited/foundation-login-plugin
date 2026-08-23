@@ -3,7 +3,7 @@ Contributors: Inkfire
 Tags: login, branding, security, custom login
 Requires at least: 6.0
 Tested up to: 6.9
-Stable tag: 2.2.3
+Stable tag: 2.2.4
 Requires PHP: 7.4
 License: GPLv2 or later
 
@@ -15,7 +15,7 @@ Replaces the default WordPress login screen with the Inkfire two‑column layout
 
 Key Features:
 
-Enterprise Security: Built-in brute force protection (limiting attempts by IP) and CSRF checks on all forms.
+Enterprise Security: Built-in brute force protection (limiting attempts by IP), server-side honeypot protection for the branded login form, and CSRF checks on all forms.
 
 Strict Branding: Enforces Inkfire brand colors (Teal/Pink) and assets, preventing theme bleeds.
 
@@ -42,6 +42,10 @@ The plugin includes a self-hosted updater. When a new release is available on Gi
 This is a "Gold Master" plugin with hardcoded branding to ensure consistency across all client sites. To change branding, you must modify the assets/ folder and inkfire-login-styler.php in the source code.
 
 == Changelog ==
+
+= 2.2.4 =
+
+Security: Added an always-on, server-validated honeypot to the branded inline login form. Blocked attempts are recorded in Foundation diagnostics without consuming a real user's lockout allowance.
 
 = 2.2.3 =
 

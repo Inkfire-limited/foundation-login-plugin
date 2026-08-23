@@ -10,7 +10,7 @@ Part of the Foundation plugin series by Inkfire Limited.
 
 | | |
 |---|---|
-| Current version | 2.2.3 |
+| Current version | 2.2.4 |
 | Requires WordPress | 6.0+ |
 | Tested up to | 6.9 |
 | Requires PHP | 7.4+ |
@@ -31,6 +31,9 @@ alongside the existing one instead of updating it in place.
 - **Brute force protection** — login attempts throttled by resolved remote address, with
   lockout expiry persisted in plugin-managed transients so countdowns behave correctly on
   sites using persistent object caches.
+- **Inline-login honeypot** — an always-on, server-validated trap protects the branded
+  login form without relying on another plugin or a per-site setting. Blocked attempts are
+  visible in the on-site diagnostics log and do not consume a user's lockout allowance.
 - **CSRF protection** — nonce verification on all authentication forms, with documented
   pass-throughs for WooCommerce lost-password, WP-CLI, and admin-triggered reset flows.
 - **Accessibility** — WCAG 2.1 AA contrast, visible focus states, ARIA labelling, and

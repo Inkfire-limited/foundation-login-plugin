@@ -221,6 +221,7 @@ class IFLS_Dashboard {
             'reset_completed' => __('Reset completed', 'inkfire-login-styler'),
             'reset_failed' => __('Reset failed', 'inkfire-login-styler'),
             'csrf_blocked' => __('Security block', 'inkfire-login-styler'),
+            'honeypot_blocked' => __('Honeypot blocked', 'inkfire-login-styler'),
             'registration' => __('Registration', 'inkfire-login-styler'),
         ];
         return isset($labels[$event]) ? $labels[$event] : str_replace('_', ' ', (string) $event);
@@ -230,7 +231,7 @@ class IFLS_Dashboard {
         if ('success' === $outcome || in_array($event, ['login_success', 'logout', 'reset_completed', 'registration'], true)) {
             return 'success';
         }
-        if (in_array($event, ['lockout', 'csrf_blocked'], true) || 'blocked' === $outcome) {
+        if (in_array($event, ['lockout', 'csrf_blocked', 'honeypot_blocked'], true) || 'blocked' === $outcome) {
             return 'blocked';
         }
         if ('failure' === $outcome || in_array($event, ['login_failed', 'reset_failed'], true)) {
@@ -612,7 +613,7 @@ class IFLS_Dashboard {
         $lines[] = str_repeat('-', 56);
         foreach ([
             'login_success', 'login_failed', 'logout', 'lockout', 'reset_requested',
-            'reset_completed', 'reset_failed', 'csrf_blocked', 'registration'
+            'reset_completed', 'reset_failed', 'csrf_blocked', 'honeypot_blocked', 'registration'
         ] as $event) {
             $add($event . ' 24h:', IFLS_Event_Log::count_since($event, 1440));
             $add($event . ' 7d:', IFLS_Event_Log::count_since($event, 10080));
