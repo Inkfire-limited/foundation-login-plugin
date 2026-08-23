@@ -3,7 +3,7 @@
  * Plugin Name:       Foundation - Inkfire Login
  * Plugin URI:        https://github.com/Inkfire-limited/foundation-login-plugin/
  * Description:       Enterprise-grade login customizer. Secure, responsive, and branded.
- * Version:           2.2.3
+ * Version:           2.2.4
  * Author:            Sonny x Inkfire
  * Author URI:        https://inkfire.co.uk/
  * Text Domain:       inkfire-login-styler
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 if (!defined('INKFIRE_LOGIN_BG'))   define('INKFIRE_LOGIN_BG',   plugins_url('assets/inkfire_background.png', __FILE__));
 if (!defined('INKFIRE_LOGIN_LOGO')) define('INKFIRE_LOGIN_LOGO', plugins_url('assets/inkfire_logo.webp', __FILE__));
 if (!defined('INKFIRE_LOGIN_ICON')) define('INKFIRE_LOGIN_ICON', plugins_url('assets/inkfire_icon.png', __FILE__));
-if (!defined('IFLS_VERSION'))       define('IFLS_VERSION',       '2.2.3');
+if (!defined('IFLS_VERSION'))       define('IFLS_VERSION',       '2.2.4');
 
 // Brand colors
 if (!defined('IF_TEAL'))   define('IF_TEAL',   '#1e4e47');
@@ -191,6 +191,10 @@ class IFLS_Enterprise_Security {
     }
     
     private function __construct() {
+        // The branded inline form is generated separately from WordPress' core
+        // login form, so its honeypot must be enforced here rather than being
+        // delegated to another security plugin's form hook.
+        add_filter('authenticate', [$this, 'reject_inline_login_honeypot'], 1, 3);
         add_filter('authenticate', [$this, 'check_login_attempts'], 5, 3);
         add_action('wp_login_failed', [$this, 'log_failed_attempt']);
         add_action('wp_login', [$this, 'clear_attempts_on_success']);
@@ -233,6 +237,10 @@ class IFLS_Enterprise_Security {
         }, 10, 2);
 
         add_action('wp_login_failed', function($username) {
+            if (!empty($GLOBALS['ifls_inline_login_honeypot_blocked'])) {
+                return;
+            }
+
             IFLS_Event_Log::record('login_failed', ['username' => $username]);
         });
 
@@ -385,8 +393,64 @@ class IFLS_Enterprise_Security {
         }
         return $user;
     }
+
+    /**
+     * Reject bots that populate the visually-hidden field on the branded
+     * inline login form. This check is deliberately self-contained: every
+     * site using Foundation - Inkfire Login receives the same protection and
+     * a third-party security-plugin setting cannot disable it.
+     *
+     * @param WP_User|WP_Error|null $user     Existing authentication result.
+     * @param string                $username Submitted username or email.
+     * @param string                $password Submitted password.
+     * @return WP_User|WP_Error|null
+     */
+    public function reject_inline_login_honeypot($user, $username, $password) {
+        if (is_wp_error($user)) {
+            return $user;
+        }
+
+        if ('POST' !== strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? ''))) {
+            return $user;
+        }
+
+        $form_marker = isset($_POST['ifls_login_form']) && is_scalar($_POST['ifls_login_form'])
+            ? (string) wp_unslash($_POST['ifls_login_form'])
+            : '';
+
+        if ('inline' !== $form_marker) {
+            return $user;
+        }
+
+        $honeypot = isset($_POST['ifls_login_website']) && is_scalar($_POST['ifls_login_website'])
+            ? trim((string) wp_unslash($_POST['ifls_login_website']))
+            : '';
+
+        if ('' === $honeypot) {
+            return $user;
+        }
+
+        // WordPress will emit wp_login_failed for a WP_Error result. Do not let
+        // automated honeypot traffic consume a real user's lockout allowance.
+        $GLOBALS['ifls_inline_login_honeypot_blocked'] = true;
+
+        IFLS_Event_Log::record('honeypot_blocked', [
+            'username' => is_scalar($username) ? (string) $username : '',
+            'outcome'  => 'blocked',
+            'detail'   => ['form' => 'inline_login'],
+        ]);
+
+        return new WP_Error(
+            'ifls_login_honeypot',
+            __('Unable to process this login request.', 'inkfire-login-styler')
+        );
+    }
     
     public function log_failed_attempt($username) {
+        if (!empty($GLOBALS['ifls_inline_login_honeypot_blocked'])) {
+            return;
+        }
+
         if (empty($username)) return;
         $key = $this->get_lockout_key($username);
         $attempts = (int) (get_transient($key) ?: 0);
@@ -766,7 +830,7 @@ function ifls_render_inline_form($action) {
         ]);
         $form_html = str_replace(
             '</form>',
-            '<input type="hidden" name="testcookie" value="1" /></form>',
+            '<p class="ifls-login-honeypot" aria-hidden="true"><label for="ifls-login-website">' . esc_html__('Website', 'inkfire-login-styler') . '<input type="text" name="ifls_login_website" id="ifls-login-website" value="" tabindex="-1" autocomplete="off" /></label></p><input type="hidden" name="ifls_login_form" value="inline" /><input type="hidden" name="testcookie" value="1" /></form>',
             $form_html
         );
         $heading = '<h2 class="if-card-title">' . esc_html(ifls_heading_text(__('Sign in to', 'inkfire-login-styler'))) . '</h2>';
