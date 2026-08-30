@@ -3,7 +3,7 @@ Contributors: Inkfire
 Tags: login, branding, security, custom login
 Requires at least: 6.0
 Tested up to: 7.1
-Stable tag: 2.3.1
+Stable tag: 2.3.2
 Requires PHP: 7.4
 License: GPLv2 or later
 
@@ -42,6 +42,14 @@ The plugin includes a self-hosted updater. When a new release is available on Gi
 This is a "Gold Master" plugin with hardcoded branding to ensure consistency across all client sites. To change branding, you must modify the assets/ folder and inkfire-login-styler.php in the source code.
 
 == Changelog ==
+
+= 2.3.2 =
+
+Design: Expanded the operations dashboard to the full available WordPress admin width, with responsive wide-screen card grids and contained table overflow.
+
+Design: Corrected light and dark mode as complete surface systems, including the dashboard canvas, hero, navigation, notices, tables and form controls.
+
+Design: Normalised action buttons and aligned security-card controls consistently across desktop, tablet and mobile layouts.
 
 = 2.3.1 =
 
