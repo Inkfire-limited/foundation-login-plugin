@@ -58,6 +58,14 @@ update_option(IFLS_Security_Status::OPTION, [
 ifls_playground_assert('none' === IFLS_Security_Status::verification_status('edge'), 'A verification copied from another hostname was trusted.');
 delete_option(IFLS_Security_Status::OPTION);
 
+$diagnostic_settings = ifls_diag_defaults();
+$diagnostic_settings['logging_enabled'] = false;
+update_option('ifls_diagnostics_settings', $diagnostic_settings, false);
+$security_checks = IFLS_Security_Status::checks();
+ifls_playground_assert(false === $security_checks['telemetry']['foundation_logging'], 'Disabled Foundation logging was reported as active.');
+ifls_playground_assert('red' === $security_checks['telemetry']['tone'], 'A site with no active failed-login logger must report red.');
+delete_option('ifls_diagnostics_settings');
+
 $ip = '203.0.113.77';
 $username = 'playground-rate-limit-user';
 $_SERVER['REMOTE_ADDR'] = $ip;

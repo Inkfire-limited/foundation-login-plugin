@@ -111,15 +111,25 @@ class IFLS_Security_Status {
 
         $owner = strtolower((string) IFLS_AUTH_TELEMETRY_OWNER);
         $aios = self::aios_active();
-        if ('foundation' === $owner || ('coexist' === $owner && !$aios)) {
+        $foundation_logging = function_exists('ifls_diag_enabled')
+            && ifls_diag_enabled()
+            && (bool) ifls_diag_setting('logging_enabled');
+
+        if (!in_array($owner, ['coexist', 'foundation'], true)) {
+            $telemetry_tone = 'red';
+            $telemetry_label = __('Invalid telemetry owner', 'inkfire-login-styler');
+        } elseif (!$foundation_logging && $aios) {
+            $telemetry_tone = 'amber';
+            $telemetry_label = __('Foundation logging is off; AIOS remains active', 'inkfire-login-styler');
+        } elseif (!$foundation_logging) {
+            $telemetry_tone = 'red';
+            $telemetry_label = __('Foundation failed-login logging is off', 'inkfire-login-styler');
+        } elseif ('foundation' === $owner || ('coexist' === $owner && !$aios)) {
             $telemetry_tone = 'green';
             $telemetry_label = 'foundation' === $owner ? __('Foundation owns failed-login telemetry', 'inkfire-login-styler') : __('No known duplicate logger active', 'inkfire-login-styler');
         } elseif ('coexist' === $owner && $aios) {
             $telemetry_tone = 'amber';
             $telemetry_label = __('Foundation and AIOS both log failures', 'inkfire-login-styler');
-        } else {
-            $telemetry_tone = 'red';
-            $telemetry_label = __('Invalid telemetry owner', 'inkfire-login-styler');
         }
 
         $external = [];
@@ -156,6 +166,7 @@ class IFLS_Security_Status {
                 'label' => $telemetry_label,
                 'owner' => $owner,
                 'aios' => $aios,
+                'foundation_logging' => $foundation_logging,
             ],
         ];
     }
