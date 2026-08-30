@@ -62,8 +62,11 @@ class IFLS_Dashboard {
             return;
         }
 
-        $asset_base = plugin_dir_url(dirname(__DIR__) . '/inkfire-login-styler.php') . 'assets/admin/';
-        wp_enqueue_style('foundation-admin-shell', $asset_base . 'foundation-admin-shell.css', [], IFLS_VERSION);
+        $plugin_file = dirname(__DIR__) . '/inkfire-login-styler.php';
+        $asset_base = plugin_dir_url($plugin_file) . 'assets/admin/';
+        $css_path = plugin_dir_path($plugin_file) . 'assets/admin/foundation-admin-shell.css';
+        $css_version = file_exists($css_path) ? (string) filemtime($css_path) : IFLS_VERSION;
+        wp_enqueue_style('foundation-admin-shell', $asset_base . 'foundation-admin-shell.css', [], $css_version);
 
         if (!$is_dashboard) {
             return;
