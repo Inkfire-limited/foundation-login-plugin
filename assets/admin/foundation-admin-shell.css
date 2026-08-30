@@ -777,6 +777,111 @@
   font-size: 1rem;
 }
 
+.foundation-admin-rich .ifls-security-summary {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 18px;
+  padding: 18px;
+  border: 1px solid var(--foundation-border);
+  border-left-width: 5px;
+  border-radius: 18px;
+  background: var(--foundation-surface-strong);
+}
+
+.foundation-admin-rich .ifls-security-summary strong {
+  display: block;
+  color: var(--foundation-ink);
+  font-size: 1.15rem;
+}
+
+.foundation-admin-rich .ifls-security-summary p {
+  margin: 6px 0 0;
+}
+
+.foundation-admin-rich .ifls-security-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.foundation-admin-rich .ifls-security-card {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--foundation-border);
+  border-top-width: 4px;
+  border-radius: 18px;
+  background: var(--foundation-surface-strong);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+}
+
+.foundation-admin-rich .ifls-security-card header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.foundation-admin-rich .ifls-security-card h3 {
+  margin: 0 0 4px;
+  color: var(--foundation-ink);
+  font-size: 15px;
+}
+
+.foundation-admin-rich .ifls-security-card header strong {
+  color: var(--foundation-muted);
+  font-size: 13px;
+}
+
+.foundation-admin-rich .ifls-security-card p {
+  color: var(--foundation-muted);
+  line-height: 1.6;
+}
+
+.foundation-admin-rich .ifls-security-evidence {
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--foundation-panel);
+  font-size: 13px;
+}
+
+.foundation-admin-rich .ifls-rag-light {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  border: 3px solid rgba(255, 255, 255, 0.82);
+  border-radius: 50%;
+  background: #94a3b8;
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.18), 0 0 0 5px rgba(148, 163, 184, 0.13);
+}
+
+.foundation-admin-rich .is-green {
+  border-color: rgba(15, 118, 110, 0.38);
+}
+
+.foundation-admin-rich .is-green .ifls-rag-light {
+  background: #16a34a;
+  box-shadow: 0 0 0 1px rgba(22, 163, 74, 0.4), 0 0 0 5px rgba(22, 163, 74, 0.13);
+}
+
+.foundation-admin-rich .is-amber {
+  border-color: rgba(226, 114, 0, 0.42);
+}
+
+.foundation-admin-rich .is-amber .ifls-rag-light {
+  background: #e27200;
+  box-shadow: 0 0 0 1px rgba(226, 114, 0, 0.42), 0 0 0 5px rgba(226, 114, 0, 0.13);
+}
+
+.foundation-admin-rich .is-red {
+  border-color: rgba(180, 35, 24, 0.4);
+}
+
+.foundation-admin-rich .is-red .ifls-rag-light {
+  background: #dc2626;
+  box-shadow: 0 0 0 1px rgba(220, 38, 38, 0.4), 0 0 0 5px rgba(220, 38, 38, 0.13);
+}
+
 .foundation-admin-rich .ifls-health-code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 12px !important;
@@ -842,7 +947,8 @@
 
 @media (max-width: 620px) {
   .foundation-admin-rich .ifls-dashboard-grid,
-  .foundation-admin-rich .ifls-health-grid {
+  .foundation-admin-rich .ifls-health-grid,
+  .foundation-admin-rich .ifls-security-grid {
     grid-template-columns: 1fr;
   }
 

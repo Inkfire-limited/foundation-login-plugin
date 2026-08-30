@@ -53,6 +53,10 @@ jobs:
             php -l "$file"
           done < <(find . -type f -name '*.php' -not -path './.git/*')
 
+      - name: Run authentication security regressions
+        shell: bash
+        run: php tests/security-regression.php
+
       - name: Check JavaScript syntax
         shell: bash
         run: |
@@ -71,6 +75,7 @@ jobs:
             --exclude '.github' \
             --exclude 'dist' \
             --exclude 'docs' \
+            --exclude 'tests' \
             --exclude 'LICENSE' \
             --exclude 'README.md' \
             ./ "$package_root/"
@@ -91,3 +96,32 @@ jobs:
             dist/foundation-inkfire-login-styler.zip.sha256
           if-no-files-found: error
           retention-days: 30
+
+  wordpress-playground:
+    name: WordPress integration (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php:
+          - "7.4"
+          - "8.3"
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+
+      - name: Run WordPress Playground integration
+        shell: bash
+        run: |
+          npx --yes @wp-playground/cli@3.1.51 php \
+            --php=${{ matrix.php }} \
+            --wp=latest \
+            --auto-mount \
+            -- \
+            /wordpress/wp-content/plugins/foundation-login-plugin/tests/playground-integration.php

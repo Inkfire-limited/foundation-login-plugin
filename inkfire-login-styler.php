@@ -3,7 +3,7 @@
  * Plugin Name:       Foundation - Inkfire Login
  * Plugin URI:        https://github.com/Inkfire-limited/foundation-login-plugin/
  * Description:       Enterprise-grade login customizer. Secure, responsive, and branded.
- * Version:           2.2.4
+ * Version:           2.3.0
  * Author:            Sonny x Inkfire
  * Author URI:        https://inkfire.co.uk/
  * Text Domain:       inkfire-login-styler
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 if (!defined('INKFIRE_LOGIN_BG'))   define('INKFIRE_LOGIN_BG',   plugins_url('assets/inkfire_background.png', __FILE__));
 if (!defined('INKFIRE_LOGIN_LOGO')) define('INKFIRE_LOGIN_LOGO', plugins_url('assets/inkfire_logo.webp', __FILE__));
 if (!defined('INKFIRE_LOGIN_ICON')) define('INKFIRE_LOGIN_ICON', plugins_url('assets/inkfire_icon.png', __FILE__));
-if (!defined('IFLS_VERSION'))       define('IFLS_VERSION',       '2.2.4');
+if (!defined('IFLS_VERSION'))       define('IFLS_VERSION',       '2.3.0');
 
 // Brand colors
 if (!defined('IF_TEAL'))   define('IF_TEAL',   '#1e4e47');
@@ -35,6 +35,13 @@ if (!defined('IF_ORANGE')) define('IF_ORANGE', '#e27200');
 // Security settings
 if (!defined('IFLS_MAX_LOGIN_ATTEMPTS')) define('IFLS_MAX_LOGIN_ATTEMPTS', 5);
 if (!defined('IFLS_LOCKOUT_TIME')) define('IFLS_LOCKOUT_TIME', 900); 
+if (!defined('IFLS_MAX_IP_ATTEMPTS')) define('IFLS_MAX_IP_ATTEMPTS', 20);
+if (!defined('IFLS_IP_LOCKOUT_TIME')) define('IFLS_IP_LOCKOUT_TIME', 900);
+
+// Keep third-party authentication logs unless a site deliberately assigns
+// Foundation as the sole owner. Set this to "foundation" in wp-config.php
+// only after confirming that another plugin is duplicating failed-login rows.
+if (!defined('IFLS_AUTH_TELEMETRY_OWNER')) define('IFLS_AUTH_TELEMETRY_OWNER', 'coexist');
 
 /* ==========================================================================
    Updater Check
@@ -52,8 +59,10 @@ require_once __DIR__ . '/inc/class-ifls-event-log.php';
 require_once __DIR__ . '/inc/class-ifls-incident-reporter.php';
 require_once __DIR__ . '/inc/class-ifls-mail-diagnostics.php';
 require_once __DIR__ . '/inc/class-ifls-diagnostics-admin.php';
+require_once __DIR__ . '/inc/class-ifls-security-status.php';
 
 IFLS_Diagnostics_Admin::init();
+IFLS_Security_Status::init();
 
 // A five-minute schedule for threshold evaluation and queued dispatch.
 add_filter('cron_schedules', function($schedules) {
@@ -112,10 +121,13 @@ register_shutdown_function(function() {
     );
 });
 
-// Create/upgrade the event table and ensure the prune job exists. Activation
-// hooks do not fire on plugin UPDATE, so the schema version is checked on every
-// load rather than relying on activation alone.
-add_action('plugins_loaded', function() {
+/**
+ * Create/upgrade diagnostics storage and schedule bounded maintenance.
+ *
+ * Called on activation for a complete first request and on plugins_loaded so
+ * normal updates can migrate the schema without requiring reactivation.
+ */
+function ifls_boot_diagnostics() {
     if (!ifls_diag_enabled()) {
         return;
     }
@@ -131,7 +143,8 @@ add_action('plugins_loaded', function() {
     if (!wp_next_scheduled('ifls_dispatch_incidents')) {
         wp_schedule_event(time() + 300, 'ifls_five_minutes', 'ifls_dispatch_incidents');
     }
-}, 20);
+}
+add_action('plugins_loaded', 'ifls_boot_diagnostics', 20);
 
 add_action('ifls_prune_events', ['IFLS_Event_Log', 'prune']);
 
@@ -183,7 +196,9 @@ function ifls_handle_confirm_admin_email() {
 
 class IFLS_Enterprise_Security {
     private static $instance = null;
-    private $transient_prefix = 'ifls_lock_';
+    private $transient_prefix = 'ifls_lock_user_';
+    private $ip_transient_prefix = 'ifls_lock_ip_';
+    private $lockout_log_prefix = 'ifls_lock_logged_';
     
     public static function get_instance() {
         if (null === self::$instance) self::$instance = new self();
@@ -198,6 +213,7 @@ class IFLS_Enterprise_Security {
         add_filter('authenticate', [$this, 'check_login_attempts'], 5, 3);
         add_action('wp_login_failed', [$this, 'log_failed_attempt']);
         add_action('wp_login', [$this, 'clear_attempts_on_success']);
+        add_filter('aios_audit_log_record_event', [$this, 'filter_aios_auth_event'], 10, 5);
         
         foreach (['login_form', 'login_form_lostpassword', 'login_form_register', 'login_form_rp', 'login_form_resetpass'] as $action) {
             add_action($action, [$this, 'add_csrf_tokens']);
@@ -238,6 +254,14 @@ class IFLS_Enterprise_Security {
 
         add_action('wp_login_failed', function($username) {
             if (!empty($GLOBALS['ifls_inline_login_honeypot_blocked'])) {
+                return;
+            }
+
+            // A throttled request has already produced one sampled lockout
+            // event for this window. Recording a second failed-login row on
+            // every rejected POST recreates the database amplification that
+            // the throttle is intended to stop.
+            if (!empty($GLOBALS['ifls_login_throttled'])) {
                 return;
             }
 
@@ -295,43 +319,28 @@ class IFLS_Enterprise_Security {
         }, 5);
     }
 
-    private function parse_forwarded_ip_header($value) {
-        if (!is_string($value) || '' === $value) {
-            return '';
-        }
-
-        foreach (explode(',', $value) as $candidate) {
-            $candidate = trim($candidate);
-            if (filter_var($candidate, FILTER_VALIDATE_IP)) {
-                return $candidate;
-            }
-        }
-
-        return '';
-    }
-
     private function get_client_ip() {
         $remote_addr = isset($_SERVER['REMOTE_ADDR']) ? trim((string) wp_unslash($_SERVER['REMOTE_ADDR'])) : '';
-        if (filter_var($remote_addr, FILTER_VALIDATE_IP)) {
-            return $remote_addr;
-        }
+        return filter_var($remote_addr, FILTER_VALIDATE_IP) ? $remote_addr : '';
+    }
 
-        foreach (['HTTP_CF_CONNECTING_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_CLIENT_IP'] as $key) {
-            if (!isset($_SERVER[$key])) {
-                continue;
-            }
-
-            $ip = $this->parse_forwarded_ip_header((string) wp_unslash($_SERVER[$key]));
-            if ($ip) {
-                return $ip;
-            }
-        }
-
-        return '0.0.0.0';
+    /**
+     * Return a keyed, non-reversible identifier for transient names.
+     *
+     * Raw usernames and addresses must not appear in wp_options keys. A keyed
+     * hash also prevents an attacker who obtains an options-only export from
+     * cheaply reversing predictable usernames or IP addresses.
+     */
+    private function fingerprint($scope, $username, $ip) {
+        return substr(
+            hash_hmac('sha256', (string) $scope . "\0" . (string) $username . "\0" . (string) $ip, wp_salt('auth')),
+            0,
+            40
+        );
     }
 
     private function get_lockout_key_for($username, $ip) {
-        return $this->transient_prefix . md5((string) $username . (string) $ip);
+        return $this->transient_prefix . $this->fingerprint('identity', $username, $ip);
     }
 
     private function get_lockout_key($username) {
@@ -346,13 +355,51 @@ class IFLS_Enterprise_Security {
         return $this->get_lockout_expiry_key_for($username, $this->get_client_ip());
     }
 
+    private function get_ip_lockout_key_for($ip) {
+        return $this->ip_transient_prefix . $this->fingerprint('ip', '', $ip);
+    }
+
+    private function get_ip_lockout_expiry_key_for($ip) {
+        return $this->get_ip_lockout_key_for($ip) . '_expires';
+    }
+
+    private function get_lockout_log_key_for($scope, $username, $ip) {
+        return $this->lockout_log_prefix . $this->fingerprint($scope, $username, $ip);
+    }
+
     private function get_lockout_time_left($username) {
-        $expires_at = (int) get_transient($this->get_lockout_expiry_key($username));
+        $ip = $this->get_client_ip();
+        $identity_expiry = (int) get_transient($this->get_lockout_expiry_key_for($username, $ip));
+        $ip_expiry = (int) get_transient($this->get_ip_lockout_expiry_key_for($ip));
+        $expires_at = max($identity_expiry, $ip_expiry);
         if ($expires_at > time()) {
             return $expires_at - time();
         }
 
-        return IFLS_LOCKOUT_TIME;
+        return max(IFLS_LOCKOUT_TIME, IFLS_IP_LOCKOUT_TIME);
+    }
+
+    private function maybe_record_lockout($scope, $username, $ip, $ttl) {
+        $key = $this->get_lockout_log_key_for($scope, $username, $ip);
+        if (get_transient($key)) {
+            return;
+        }
+
+        set_transient($key, 1, $ttl);
+        IFLS_Event_Log::record('lockout', [
+            'username' => $username,
+            'detail'   => ['scope' => $scope],
+        ]);
+    }
+
+    private function send_throttle_headers($retry_after) {
+        if (headers_sent()) {
+            return;
+        }
+
+        status_header(429);
+        nocache_headers();
+        header('Retry-After: ' . max(1, absint($retry_after)));
     }
 
     /**
@@ -384,11 +431,17 @@ class IFLS_Enterprise_Security {
     
     public function check_login_attempts($user, $username, $password) {
         if (empty($username)) return $user;
-        $key = $this->get_lockout_key($username);
-        $attempts = get_transient($key) ?: 0;
-        if ($attempts >= IFLS_MAX_LOGIN_ATTEMPTS) {
+        $ip = $this->get_client_ip();
+        if ('' === $ip) return $user;
+        $identity_attempts = (int) (get_transient($this->get_lockout_key_for($username, $ip)) ?: 0);
+        $ip_attempts = (int) (get_transient($this->get_ip_lockout_key_for($ip)) ?: 0);
+
+        if ($identity_attempts >= IFLS_MAX_LOGIN_ATTEMPTS || $ip_attempts >= IFLS_MAX_IP_ATTEMPTS) {
+            $scope = $ip_attempts >= IFLS_MAX_IP_ATTEMPTS ? 'ip' : 'identity';
             $time_left = max(1, $this->get_lockout_time_left($username));
-            IFLS_Event_Log::record('lockout', ['username' => $username]);
+            $GLOBALS['ifls_login_throttled'] = true;
+            $this->maybe_record_lockout($scope, $username, $ip, $time_left);
+            $this->send_throttle_headers($time_left);
             return new WP_Error('too_many_attempts', sprintf(__('Too many failed attempts. Try again in %d minutes.', 'inkfire-login-styler'), ceil($time_left / 60)));
         }
         return $user;
@@ -451,15 +504,27 @@ class IFLS_Enterprise_Security {
             return;
         }
 
+        if (!empty($GLOBALS['ifls_login_throttled'])) {
+            return;
+        }
+
         if (empty($username)) return;
-        $key = $this->get_lockout_key($username);
-        $attempts = (int) (get_transient($key) ?: 0);
-        $attempts++;
+        $ip = $this->get_client_ip();
+        if ('' === $ip) return;
+        $key = $this->get_lockout_key_for($username, $ip);
+        $attempts = (int) (get_transient($key) ?: 0) + 1;
+        $ip_key = $this->get_ip_lockout_key_for($ip);
+        $ip_attempts = (int) (get_transient($ip_key) ?: 0) + 1;
 
         set_transient($key, $attempts, IFLS_LOCKOUT_TIME);
+        set_transient($ip_key, $ip_attempts, IFLS_IP_LOCKOUT_TIME);
 
         if ($attempts >= IFLS_MAX_LOGIN_ATTEMPTS) {
             set_transient($this->get_lockout_expiry_key($username), time() + IFLS_LOCKOUT_TIME, IFLS_LOCKOUT_TIME);
+        }
+
+        if ($ip_attempts >= IFLS_MAX_IP_ATTEMPTS) {
+            set_transient($this->get_ip_lockout_expiry_key_for($ip), time() + IFLS_IP_LOCKOUT_TIME, IFLS_IP_LOCKOUT_TIME);
         }
     }
     
@@ -467,6 +532,24 @@ class IFLS_Enterprise_Security {
         $key = $this->get_lockout_key($username);
         delete_transient($key);
         delete_transient($this->get_lockout_expiry_key($username));
+    }
+
+    /**
+     * Let a site explicitly assign failed-login telemetry to Foundation.
+     *
+     * AIOS builds and serializes a PHP stack trace for each audit event. On a
+     * busy login endpoint that duplicate record is materially more expensive
+     * than Foundation's bounded row. The default remains "coexist" so an
+     * upgrade never silently changes a third-party security log.
+     */
+    public function filter_aios_auth_event($record, $event_type, $details, $event_level, $username) {
+        unset($details, $event_level, $username);
+
+        if ('foundation' !== strtolower((string) IFLS_AUTH_TELEMETRY_OWNER)) {
+            return $record;
+        }
+
+        return 'failed_login' === (string) $event_type ? false : $record;
     }
     
     public function add_csrf_tokens() { wp_nonce_field('ifls_form_action', 'ifls_form_nonce'); }
@@ -1093,7 +1176,17 @@ function ifls_enqueue_admin_assets($hook) {
 }
 add_action('admin_enqueue_scripts', 'ifls_enqueue_admin_assets');
 
-register_activation_hook(__FILE__, function() { add_option('ifls_installed_version', IFLS_VERSION); });
+function ifls_activate_plugin() {
+    update_option('ifls_installed_version', IFLS_VERSION, false);
+    ifls_boot_diagnostics();
+}
+register_activation_hook(__FILE__, 'ifls_activate_plugin');
+
+function ifls_deactivate_plugin() {
+    wp_clear_scheduled_hook('ifls_prune_events');
+    wp_clear_scheduled_hook('ifls_dispatch_incidents');
+}
+register_deactivation_hook(__FILE__, 'ifls_deactivate_plugin');
 
 add_filter('login_headerurl', 'ifls_login_header_url');
 add_filter('login_headertext', 'ifls_login_header_text');

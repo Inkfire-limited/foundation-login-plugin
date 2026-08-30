@@ -19,6 +19,9 @@ if (!defined('ABSPATH')) {
 
 class IFLS_Event_Log {
 
+    const PRUNE_BATCH_SIZE = 500;
+    const PRUNE_MAX_BATCHES = 10;
+
     /**
      * Schema version. Bump to trigger dbDelta on upgrade.
      */
@@ -324,14 +327,17 @@ class IFLS_Event_Log {
             $days   = absint(ifls_diag_setting('retention_days'));
             $cutoff = gmdate('Y-m-d H:i:s', time() - ($days * DAY_IN_SECONDS));
 
+            $batches = 0;
             do {
                 $deleted = $wpdb->query(
                     $wpdb->prepare(
-                        'DELETE FROM ' . self::table() . ' WHERE created_at < %s LIMIT 1000',
-                        $cutoff
+                        'DELETE FROM ' . self::table() . ' WHERE created_at < %s LIMIT %d',
+                        $cutoff,
+                        self::PRUNE_BATCH_SIZE
                     )
                 );
-            } while ($deleted > 0);
+                $batches++;
+            } while ($deleted === self::PRUNE_BATCH_SIZE && $batches < self::PRUNE_MAX_BATCHES);
         } catch (\Throwable $e) {
             // Pruning retries on the next cron run.
         }
