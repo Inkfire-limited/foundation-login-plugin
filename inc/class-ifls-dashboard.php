@@ -192,6 +192,14 @@ class IFLS_Dashboard {
                     'templateId' => 'foundation-login-failures',
                 ],
                 [
+                    'id' => 'ifls-security',
+                    'navLabel' => __('Security', 'inkfire-login-styler'),
+                    'eyebrow' => __('Protection status', 'inkfire-login-styler'),
+                    'title' => __('Security controls and greenlights', 'inkfire-login-styler'),
+                    'description' => __('See what WordPress can prove, configure external protection, and record time-limited verification for controls outside this site.', 'inkfire-login-styler'),
+                    'templateId' => 'foundation-login-security',
+                ],
+                [
                     'id' => 'ifls-activity',
                     'navLabel' => __('Activity', 'inkfire-login-styler'),
                     'eyebrow' => __('Audit trail', 'inkfire-login-styler'),
@@ -372,6 +380,99 @@ class IFLS_Dashboard {
         <?php
     }
 
+    private static function security_verification_form($layer, $state) {
+        $is_current = 'current' === $state;
+        ?>
+        <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+            <?php wp_nonce_field('ifls_security_verification'); ?>
+            <input type="hidden" name="action" value="ifls_security_verification">
+            <input type="hidden" name="layer" value="<?php echo esc_attr($layer); ?>">
+            <input type="hidden" name="intent" value="<?php echo $is_current ? 'clear' : 'verify'; ?>">
+            <button type="submit" class="button <?php echo $is_current ? '' : 'button-primary'; ?>">
+                <?php echo $is_current ? esc_html__('Remove greenlight', 'inkfire-login-styler') : esc_html__('I have verified this', 'inkfire-login-styler'); ?>
+            </button>
+        </form>
+        <?php
+    }
+
+    private static function verification_evidence(array $check) {
+        $verification = isset($check['verification']) && is_array($check['verification']) ? $check['verification'] : [];
+        if (empty($verification['verified_at'])) {
+            return __('No administrator verification is stored for this hostname.', 'inkfire-login-styler');
+        }
+
+        $when = wp_date('j M Y H:i', (int) $verification['verified_at']);
+        if ('stale' === $check['state']) {
+            return sprintf(__('Last verified %s; the 90-day greenlight has expired.', 'inkfire-login-styler'), $when);
+        }
+
+        return sprintf(__('Verified %s for this hostname.', 'inkfire-login-styler'), $when);
+    }
+
+    private static function render_security() {
+        $checks = IFLS_Security_Status::checks();
+        $updated = isset($_GET['ifls_security_updated']) ? sanitize_key(wp_unslash($_GET['ifls_security_updated'])) : '';
+        ?>
+        <?php if (in_array($updated, ['verify', 'clear'], true)) : ?>
+            <div class="notice notice-success inline"><p><?php echo 'verify' === $updated ? esc_html__('Security verification saved for this hostname.', 'inkfire-login-styler') : esc_html__('Security verification removed.', 'inkfire-login-styler'); ?></p></div>
+        <?php endif; ?>
+
+        <div class="ifls-security-summary is-<?php echo esc_attr($checks['overall']['tone']); ?>">
+            <span class="ifls-rag-light" aria-hidden="true"></span>
+            <div>
+                <strong><?php echo esc_html($checks['overall']['label']); ?></strong>
+                <p><?php esc_html_e('Green requires Foundation’s application throttle plus a recently verified edge or web-server layer. Application-only protection is amber because PHP has already started.', 'inkfire-login-styler'); ?></p>
+            </div>
+        </div>
+
+        <div class="ifls-security-grid">
+            <article class="ifls-security-card is-<?php echo esc_attr($checks['application']['tone']); ?>">
+                <header><span class="ifls-rag-light" aria-hidden="true"></span><div><h3><?php esc_html_e('Foundation application throttle', 'inkfire-login-styler'); ?></h3><strong><?php echo esc_html($checks['application']['label']); ?></strong></div></header>
+                <p><?php printf(esc_html__('Blocks after %1$d identity attempts or %2$d address-wide attempts and returns HTTP 429.', 'inkfire-login-styler'), (int) IFLS_MAX_LOGIN_ATTEMPTS, (int) IFLS_MAX_IP_ATTEMPTS); ?></p>
+                <p class="ifls-security-evidence"><?php esc_html_e('Automatically detected from the running plugin. No external service required.', 'inkfire-login-styler'); ?></p>
+                <a class="button" href="<?php echo esc_url(self::page_url('ifls-failed-logins')); ?>"><?php esc_html_e('Review failed logins', 'inkfire-login-styler'); ?></a>
+            </article>
+
+            <article class="ifls-security-card is-<?php echo esc_attr($checks['edge']['tone']); ?>">
+                <header><span class="ifls-rag-light" aria-hidden="true"></span><div><h3><?php esc_html_e('Edge WAF / rate limiting', 'inkfire-login-styler'); ?></h3><strong><?php echo 'current' === $checks['edge']['state'] ? esc_html__('Verified', 'inkfire-login-styler') : ('stale' === $checks['edge']['state'] ? esc_html__('Re-verification due', 'inkfire-login-styler') : esc_html__('Not verified', 'inkfire-login-styler')); ?></strong></div></header>
+                <p><?php esc_html_e('Cloudflare or another reverse-proxy WAF should challenge abusive login requests before they reach this server.', 'inkfire-login-styler'); ?></p>
+                <p class="ifls-security-evidence"><?php echo esc_html(self::verification_evidence($checks['edge'])); ?><br><?php echo esc_html(IFLS_Security_Status::edge_observation()); ?></p>
+                <div class="ifls-quick-actions">
+                    <a class="button" href="https://dash.cloudflare.com/" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Open Cloudflare', 'inkfire-login-styler'); ?></a>
+                    <a class="button" href="https://developers.cloudflare.com/waf/rate-limiting-rules/" target="_blank" rel="noopener noreferrer"><?php esc_html_e('Setup guidance', 'inkfire-login-styler'); ?></a>
+                    <?php self::security_verification_form('edge', $checks['edge']['state']); ?>
+                </div>
+            </article>
+
+            <article class="ifls-security-card is-<?php echo esc_attr($checks['server']['tone']); ?>">
+                <header><span class="ifls-rag-light" aria-hidden="true"></span><div><h3><?php esc_html_e('Origin server throttling', 'inkfire-login-styler'); ?></h3><strong><?php echo 'current' === $checks['server']['state'] ? esc_html__('Verified', 'inkfire-login-styler') : ('stale' === $checks['server']['state'] ? esc_html__('Re-verification due', 'inkfire-login-styler') : esc_html__('Not verified', 'inkfire-login-styler')); ?></strong></div></header>
+                <p><?php esc_html_e('NGINX, LiteSpeed or Fail2ban controls can reject repeated login traffic before WordPress starts. Server access or hosting support is required.', 'inkfire-login-styler'); ?></p>
+                <p class="ifls-security-evidence"><?php echo esc_html(self::verification_evidence($checks['server'])); ?><br><?php echo esc_html(IFLS_Security_Status::server_observation()); ?></p>
+                <div class="ifls-quick-actions">
+                    <a class="button" href="https://nginx.org/en/docs/http/ngx_http_limit_req_module.html" target="_blank" rel="noopener noreferrer"><?php esc_html_e('NGINX guidance', 'inkfire-login-styler'); ?></a>
+                    <a class="button" href="https://docs.litespeedtech.com/lsws/cp/cpanel/antiddos/" target="_blank" rel="noopener noreferrer"><?php esc_html_e('LiteSpeed guidance', 'inkfire-login-styler'); ?></a>
+                    <?php self::security_verification_form('server', $checks['server']['state']); ?>
+                </div>
+            </article>
+
+            <article class="ifls-security-card is-<?php echo esc_attr($checks['telemetry']['tone']); ?>">
+                <header><span class="ifls-rag-light" aria-hidden="true"></span><div><h3><?php esc_html_e('Failed-login telemetry ownership', 'inkfire-login-styler'); ?></h3><strong><?php echo esc_html($checks['telemetry']['label']); ?></strong></div></header>
+                <p><?php esc_html_e('One system should own high-volume failed-login rows. Other AIOS firewall and security features remain untouched.', 'inkfire-login-styler'); ?></p>
+                <p class="ifls-security-evidence"><code>IFLS_AUTH_TELEMETRY_OWNER=<?php echo esc_html($checks['telemetry']['owner']); ?></code></p>
+                <?php if ($checks['telemetry']['aios'] && 'foundation' !== $checks['telemetry']['owner']) : ?>
+                    <p><?php esc_html_e('After validating Foundation diagnostics and retention, add the documented constant to wp-config.php to prevent duplicate AIOS failed-login rows.', 'inkfire-login-styler'); ?></p>
+                <?php endif; ?>
+                <div class="ifls-quick-actions">
+                    <?php if ($checks['telemetry']['aios']) : ?><a class="button" href="<?php echo esc_url(admin_url('admin.php?page=aiowpsec')); ?>"><?php esc_html_e('Open AIOS', 'inkfire-login-styler'); ?></a><?php endif; ?>
+                    <a class="button" href="<?php echo esc_url(self::diagnostics_url()); ?>"><?php esc_html_e('Open diagnostics', 'inkfire-login-styler'); ?></a>
+                </div>
+            </article>
+        </div>
+
+        <p class="description"><?php esc_html_e('A greenlight records an administrator’s verification; it does not configure the external service. Greenlights are hostname-bound and expire after 90 days so copied databases and stale checks cannot report a permanent false green.', 'inkfire-login-styler'); ?></p>
+        <?php
+    }
+
     private static function render_activity() {
         $rows = IFLS_Event_Log::query(['limit' => 20]);
         ?>
@@ -458,10 +559,11 @@ class IFLS_Dashboard {
      *
      * @param string $overview Overview section HTML.
      * @param string $failures Failed-login section HTML.
+     * @param string $security Security capability section HTML.
      * @param string $activity Activity section HTML.
      * @param string $health Health section HTML.
      */
-    private static function render_fallback($overview, $failures, $activity, $health) {
+    private static function render_fallback($overview, $failures, $security, $activity, $health) {
         ?>
         <div class="foundation-app-root foundation-admin-fallback">
             <header class="foundation-shell-panel">
@@ -478,6 +580,7 @@ class IFLS_Dashboard {
             <nav class="foundation-shell-nav" aria-label="<?php esc_attr_e('Section navigation', 'inkfire-login-styler'); ?>">
                 <a class="foundation-nav-button" href="#ifls-overview"><?php esc_html_e('Overview', 'inkfire-login-styler'); ?></a>
                 <a class="foundation-nav-button" href="#ifls-failed-logins"><?php esc_html_e('Failed logins', 'inkfire-login-styler'); ?></a>
+                <a class="foundation-nav-button" href="#ifls-security"><?php esc_html_e('Security', 'inkfire-login-styler'); ?></a>
                 <a class="foundation-nav-button" href="#ifls-activity"><?php esc_html_e('Activity', 'inkfire-login-styler'); ?></a>
                 <a class="foundation-nav-button" href="#ifls-health-debug"><?php esc_html_e('Health & debug', 'inkfire-login-styler'); ?></a>
             </nav>
@@ -490,6 +593,10 @@ class IFLS_Dashboard {
                 <section id="ifls-failed-logins" class="foundation-shell-section foundation-shell-panel">
                     <header class="foundation-shell-section__header"><div><p class="foundation-shell-kicker"><?php esc_html_e('Security', 'inkfire-login-styler'); ?></p><h2 class="foundation-shell-section__title"><?php esc_html_e('Failed login management', 'inkfire-login-styler'); ?></h2></div></header>
                     <div class="foundation-admin-rich"><?php echo $failures; // phpcs:ignore WordPress.Security.EscapeOutput -- generated by escaped render method. ?></div>
+                </section>
+                <section id="ifls-security" class="foundation-shell-section foundation-shell-panel">
+                    <header class="foundation-shell-section__header"><div><p class="foundation-shell-kicker"><?php esc_html_e('Protection status', 'inkfire-login-styler'); ?></p><h2 class="foundation-shell-section__title"><?php esc_html_e('Security controls and greenlights', 'inkfire-login-styler'); ?></h2></div></header>
+                    <div class="foundation-admin-rich"><?php echo $security; // phpcs:ignore WordPress.Security.EscapeOutput -- generated by escaped render method. ?></div>
                 </section>
                 <section id="ifls-activity" class="foundation-shell-section foundation-shell-panel">
                     <header class="foundation-shell-section__header"><div><p class="foundation-shell-kicker"><?php esc_html_e('Audit trail', 'inkfire-login-styler'); ?></p><h2 class="foundation-shell-section__title"><?php esc_html_e('Who is logging in and out', 'inkfire-login-styler'); ?></h2></div></header>
@@ -511,13 +618,15 @@ class IFLS_Dashboard {
 
         ob_start(); self::render_overview(); $overview = ob_get_clean();
         ob_start(); self::render_failures(); $failures = ob_get_clean();
+        ob_start(); self::render_security(); $security = ob_get_clean();
         ob_start(); self::render_activity(); $activity = ob_get_clean();
         ob_start(); self::render_health(); $health = ob_get_clean();
         ?>
         <div class="wrap foundation-admin-wrap">
-            <div id="foundation-admin-app"><?php self::render_fallback($overview, $failures, $activity, $health); ?></div>
+            <div id="foundation-admin-app"><?php self::render_fallback($overview, $failures, $security, $activity, $health); ?></div>
             <template id="foundation-login-overview"><?php echo $overview; // phpcs:ignore WordPress.Security.EscapeOutput -- generated by escaped render method. ?></template>
             <template id="foundation-login-failures"><?php echo $failures; // phpcs:ignore WordPress.Security.EscapeOutput ?></template>
+            <template id="foundation-login-security"><?php echo $security; // phpcs:ignore WordPress.Security.EscapeOutput ?></template>
             <template id="foundation-login-activity"><?php echo $activity; // phpcs:ignore WordPress.Security.EscapeOutput ?></template>
             <template id="foundation-login-health"><?php echo $health; // phpcs:ignore WordPress.Security.EscapeOutput ?></template>
         </div>
@@ -598,6 +707,14 @@ class IFLS_Dashboard {
         $lines[] = str_repeat('-', 56);
         $add('Diagnostics enabled:', ifls_diag_enabled() ? 'yes' : 'no');
         $add('Logging enabled:', ifls_diag_setting('logging_enabled') ? 'yes' : 'no');
+        $add('Auth telemetry owner:', (string) IFLS_AUTH_TELEMETRY_OWNER);
+        $security_checks = IFLS_Security_Status::checks();
+        $add('Security readiness:', $security_checks['overall']['label']);
+        $add('Application throttle:', $security_checks['application']['label']);
+        $add('Edge verification:', $security_checks['edge']['state']);
+        $add('Server verification:', $security_checks['server']['state']);
+        $add('Identity threshold:', sprintf('%d in %d seconds', (int) IFLS_MAX_LOGIN_ATTEMPTS, (int) IFLS_LOCKOUT_TIME));
+        $add('IP threshold:', sprintf('%d in %d seconds', (int) IFLS_MAX_IP_ATTEMPTS, (int) IFLS_IP_LOCKOUT_TIME));
         $add('Event table:', $table_exists ? 'present' : 'missing');
         $add('Event DB version:', get_option('ifls_events_db_version', '(none)'));
         $add('Retention days:', (int) ifls_diag_setting('retention_days'));

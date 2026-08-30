@@ -19,6 +19,7 @@ delete_option('ifls_health_status');
 delete_option('ifls_diagnostics_settings');
 delete_option('ifls_incidents');
 delete_option('ifls_events_db_version');
+delete_option('ifls_security_verifications');
 
 global $wpdb;
 

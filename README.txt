@@ -2,8 +2,8 @@
 Contributors: Inkfire
 Tags: login, branding, security, custom login
 Requires at least: 6.0
-Tested up to: 6.9
-Stable tag: 2.2.4
+Tested up to: 7.1
+Stable tag: 2.3.0
 Requires PHP: 7.4
 License: GPLv2 or later
 
@@ -15,7 +15,7 @@ Replaces the default WordPress login screen with the Inkfire two‑column layout
 
 Key Features:
 
-Enterprise Security: Built-in brute force protection (limiting attempts by IP), server-side honeypot protection for the branded login form, and CSRF checks on all forms.
+Enterprise Security: Separate identity/address and address-wide brute-force limits, standards-based 429 responses, sampled lockout telemetry, a server-side honeypot for the branded login form, and CSRF checks on all forms.
 
 Strict Branding: Enforces Inkfire brand colors (Teal/Pink) and assets, preventing theme bleeds.
 
@@ -42,6 +42,22 @@ The plugin includes a self-hosted updater. When a new release is available on Gi
 This is a "Gold Master" plugin with hardcoded branding to ensure consistency across all client sites. To change branding, you must modify the assets/ folder and inkfire-login-styler.php in the source code.
 
 == Changelog ==
+
+= 2.3.0 =
+
+Security: Added an address-wide threshold alongside the existing username/address limit so rotating usernames cannot bypass the origin throttle.
+
+Security: Trust only the origin server's validated REMOTE_ADDR value; user-supplied forwarded headers can no longer select a different rate-limit identity.
+
+Performance: Emit one sampled lockout event per lockout window and skip duplicate failed-login rows for requests already rejected by Foundation.
+
+Performance: Bound each retention cleanup run to 5,000 rows so a large expired backlog cannot monopolise a shared server cron request.
+
+Interoperability: Added the opt-in IFLS_AUTH_TELEMETRY_OWNER constant. Setting it to foundation suppresses only AIOS failed-login audit duplication while preserving every other AIOS event; the default coexist mode changes nothing.
+
+Operations: Added threshold and telemetry ownership information to privacy-safe debug reports, plus isolated authentication security regression tests in the release workflow.
+
+Operations: Added a red/amber/green security readiness dashboard. External edge and server greenlights are administrator-verified, hostname-bound, and expire after 90 days.
 
 = 2.2.4 =
 

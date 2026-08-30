@@ -10,9 +10,9 @@ Part of the Foundation plugin series by Inkfire Limited.
 
 | | |
 |---|---|
-| Current version | 2.2.4 |
+| Current version | 2.3.0 |
 | Requires WordPress | 6.0+ |
-| Tested up to | 6.9 |
+| Tested up to | 7.1 |
 | Requires PHP | 7.4+ |
 | Licence | GPLv2 or later |
 | Main file | `inkfire-login-styler.php` |
@@ -28,9 +28,9 @@ alongside the existing one instead of updating it in place.
 - **Brand enforcement** — hardcoded Inkfire teal/pink palette and assets, immune to theme
   style bleeds. This is a "Gold Master" plugin: branding is deliberately not configurable
   so every client site stays consistent.
-- **Brute force protection** — login attempts throttled by resolved remote address, with
-  lockout expiry persisted in plugin-managed transients so countdowns behave correctly on
-  sites using persistent object caches.
+- **Brute force protection** — separate identity/address and address-wide limits stop
+  username rotation, return standards-based 429 responses, and sample repeated lockout
+  telemetry rather than creating a database row for every rejected POST.
 - **Inline-login honeypot** — an always-on, server-validated trap protects the branded
   login form without relying on another plugin or a per-site setting. Blocked attempts are
   visible in the on-site diagnostics log and do not consume a user's lockout allowance.
@@ -39,6 +39,12 @@ alongside the existing one instead of updating it in place.
 - **Accessibility** — WCAG 2.1 AA contrast, visible focus states, ARIA labelling, and
   reduced-motion support.
 - **Operations dashboard** — Foundation → Inkfire Login provides audit activity, lockout insight, diagnostics and privacy-safe support reporting. The public login remains zero-configuration.
+- **Security readiness dashboard** — red/amber/green status distinguishes the
+  automatic application throttle from administrator-verified edge and origin
+  controls. External greenlights are hostname-bound and expire after 90 days.
+- **Security-plugin interoperability** — third-party audit logs remain untouched by
+  default. Sites that deliberately assign failed-login telemetry to Foundation can set
+  `IFLS_AUTH_TELEMETRY_OWNER` to `foundation` and avoid AIOS duplicate stack-trace rows.
 
 ## Installation
 
