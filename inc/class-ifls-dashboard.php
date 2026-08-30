@@ -459,7 +459,9 @@ class IFLS_Dashboard {
                 <header><span class="ifls-rag-light" aria-hidden="true"></span><div><h3><?php esc_html_e('Failed-login telemetry ownership', 'inkfire-login-styler'); ?></h3><strong><?php echo esc_html($checks['telemetry']['label']); ?></strong></div></header>
                 <p><?php esc_html_e('One system should own high-volume failed-login rows. Other AIOS firewall and security features remain untouched.', 'inkfire-login-styler'); ?></p>
                 <p class="ifls-security-evidence"><code>IFLS_AUTH_TELEMETRY_OWNER=<?php echo esc_html($checks['telemetry']['owner']); ?></code></p>
-                <?php if ($checks['telemetry']['aios'] && 'foundation' !== $checks['telemetry']['owner']) : ?>
+                <?php if (!$checks['telemetry']['foundation_logging']) : ?>
+                    <p><?php esc_html_e('Foundation diagnostics logging is disabled. Enable it in Diagnostics if Foundation should retain the local authentication audit trail.', 'inkfire-login-styler'); ?></p>
+                <?php elseif ($checks['telemetry']['aios'] && 'foundation' !== $checks['telemetry']['owner']) : ?>
                     <p><?php esc_html_e('After validating Foundation diagnostics and retention, add the documented constant to wp-config.php to prevent duplicate AIOS failed-login rows.', 'inkfire-login-styler'); ?></p>
                 <?php endif; ?>
                 <div class="ifls-quick-actions">
