@@ -57,6 +57,10 @@ jobs:
         shell: bash
         run: php tests/security-regression.php
 
+      - name: Check login script-delivery isolation
+        shell: bash
+        run: php tests/login-script-delivery.php
+
       - name: Check JavaScript syntax
         shell: bash
         run: |

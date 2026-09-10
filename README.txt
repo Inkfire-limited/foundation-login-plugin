@@ -3,7 +3,7 @@ Contributors: Inkfire
 Tags: login, branding, security, custom login
 Requires at least: 6.0
 Tested up to: 7.1
-Stable tag: 2.3.2
+Stable tag: 2.3.3
 Requires PHP: 7.4
 License: GPLv2 or later
 
@@ -42,6 +42,16 @@ The plugin includes a self-hosted updater. When a new release is available on Gi
 This is a "Gold Master" plugin with hardcoded branding to ensure consistency across all client sites. To change branding, you must modify the assets/ folder and inkfire-login-styler.php in the source code.
 
 == Changelog ==
+
+= 2.3.3 =
+
+Fix: Initialise login enhancements once, including when ready events are replayed or the asset is executed again, so the first legitimate submission is not cancelled by a duplicate handler.
+
+Fix: Clear stale submitting states after Back/Forward navigation and cancelled form submissions. Preserve native submission and duplicate-submit protection without automatically resending credentials.
+
+Compatibility: Protect the login script dependency chain, including inline scripts, from asynchronous rewriting on the login endpoint only.
+
+Testing: Add isolated script-delivery checks and a reproducible Chromium login-interface regression suite. Authentication callbacks, security settings, database schema and branding are unchanged.
 
 = 2.3.2 =
 
