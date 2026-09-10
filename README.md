@@ -10,7 +10,7 @@ Part of the Foundation plugin series by Inkfire Limited.
 
 | | |
 |---|---|
-| Current version | 2.3.2 |
+| Current version | 2.3.3 |
 | Requires WordPress | 6.0+ |
 | Tested up to | 7.1 |
 | Requires PHP | 7.4+ |

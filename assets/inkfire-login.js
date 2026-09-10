@@ -2,8 +2,20 @@
 (function () {
     'use strict';
 
+    // A cache optimizer may replay ready events or execute this asset again.
+    // Login enhancements must bind once, never cancel their own first submit.
+    if (window.IFLS_login_enhancements_loaded) {
+        return;
+    }
+    window.IFLS_login_enhancements_loaded = true;
+    let initialized = false;
+
     const IFLS = {
         init() {
+            if (initialized) {
+                return;
+            }
+            initialized = true;
             this.enhanceNotices();
             this.enhanceForms();
             this.assetErrorHandling();
@@ -91,8 +103,11 @@
 
                 const isInput = submitButton instanceof HTMLInputElement;
                 const originalText = isInput ? submitButton.value : submitButton.textContent;
+                let recoveryTimer = null;
 
                 const resetSubmissionState = () => {
+                    window.clearTimeout(recoveryTimer);
+                    recoveryTimer = null;
                     delete form.dataset.iflsSubmitted;
                     form.removeAttribute('aria-busy');
                     submitButton.removeAttribute('aria-disabled');
@@ -104,7 +119,17 @@
                     }
                 };
 
+                window.addEventListener('pageshow', (event) => {
+                    if (event.persisted) {
+                        resetSubmissionState();
+                    }
+                });
+
                 form.addEventListener('submit', (event) => {
+                    // Respect a validator that has already stopped this request.
+                    if (event.defaultPrevented) {
+                        return;
+                    }
                     // Prevent an accidental second submission without disabling
                     // the submitter, so its name/value remains in the POST body.
                     if (form.dataset.iflsSubmitted === 'true') {
@@ -123,7 +148,14 @@
                     }
 
                     // Recovery for a blocked navigation or browser-side error.
-                    window.setTimeout(resetSubmissionState, 30000);
+                    recoveryTimer = window.setTimeout(resetSubmissionState, 30000);
+                    // A later security/validation handler may cancel the same
+                    // event. Restore the UI, but never resubmit credentials.
+                    window.setTimeout(() => {
+                        if (event.defaultPrevented) {
+                            resetSubmissionState();
+                        }
+                    }, 0);
                 });
             });
         },
@@ -323,7 +355,7 @@
     };
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => IFLS.init());
+        document.addEventListener('DOMContentLoaded', () => IFLS.init(), { once: true });
     } else {
         IFLS.init();
     }
