@@ -202,7 +202,7 @@ class IFLS_Enterprise_Security {
         add_action('wp_login', [$this, 'clear_attempts_on_success']);
         add_filter('aios_audit_log_record_event', [$this, 'filter_aios_auth_event'], 10, 5);
         
-        foreach (['login_form', 'login_form_lostpassword', 'login_form_register', 'login_form_rp', 'login_form_resetpass'] as $action) {
+        foreach (['login_form', 'login_form_lostpassword', 'login_form_register', 'login_form_rp', 'login_form_resetpass', 'woocommerce_resetpassword_form'] as $action) {
             add_action($action, [$this, 'add_csrf_tokens']);
         }
         
@@ -605,8 +605,7 @@ class IFLS_Enterprise_Security {
             return;
         }
 
-        // WooCommerce uses its own lost-password nonce and does not include the
-        // custom IFLS field on the My Account reset form.
+        // WooCommerce validates its own nonce on the initial recovery request.
         if (isset($_POST['woocommerce-lost-password-nonce'])) {
             return;
         }
@@ -879,6 +878,27 @@ function ifls_get_login_notice_html() {
     return $notice_html;
 }
 
+// AIOS can protect wp-login.php without adding its CAPTCHA to wp_login_form().
+function ifls_add_login_captcha($html, $args) {
+    global $aio_wp_security;
+    if ('if_card_loginform' !== ($args['form_id'] ?? '')
+        || !isset($aio_wp_security->configs, $aio_wp_security->captcha_obj)
+        || !is_callable([$aio_wp_security->configs, 'get_value'])
+        || !is_callable([$aio_wp_security->captcha_obj, 'display_captcha_form'])) {
+        return $html;
+    }
+
+    $config = $aio_wp_security->configs;
+    if ('1' !== $config->get_value('aiowps_enable_login_captcha')
+        || ('1' === $config->get_value('aiowps_enable_custom_login_captcha') && !is_user_logged_in())) {
+        return $html;
+    }
+
+    $captcha = $aio_wp_security->captcha_obj->display_captcha_form($config->get_value('aiowps_default_captcha'), true);
+    return is_string($captcha) ? $html . $captcha : $html;
+}
+add_filter('login_form_middle', 'ifls_add_login_captcha', 20, 2);
+
 function ifls_render_inline_form($action) {
     $action = $action === '' ? 'login' : $action;
     
@@ -1030,7 +1050,28 @@ function ifls_render_inline_form($action) {
     return '';
 }
 
-function ifls_render_login_layout() {
+function ifls_login_header_layout() {
+    $action = ifls_sanitize_request('action') ?: 'login';
+    if ('login' !== $action || !has_filter('login_message')) {
+        ifls_render_login_layout();
+        return;
+    }
+
+    // Build the branded form before core consumes login errors and renders its own CAPTCHA.
+    $form = ifls_render_inline_form('login');
+    $notice = '';
+    add_filter('login_message', static function ($message) use (&$notice) {
+        $notice = ifls_enhance_legacy_notice_markup((string) $message);
+        return $message;
+    }, PHP_INT_MAX);
+
+    // At this point core has run the notice providers once and closed its hidden form.
+    add_action('login_footer', static function () use ($form, &$notice) {
+        ifls_render_login_layout($form, $notice);
+    }, 0);
+}
+
+function ifls_render_login_layout($inline_form = null, $login_notice = '') {
     $action = ifls_sanitize_request('action') ?: 'login';
     $site_name = get_bloginfo('name');
     $home_url = home_url('/');
@@ -1046,7 +1087,7 @@ function ifls_render_login_layout() {
             $lang_selector = preg_replace(['/id=("|\')language-switcher(\1)/', '/for=("|\')language-switcher-locales(\1)/', '/id=("|\')language-switcher-locales(\1)/'], ['id="if-language-switcher"', 'for="if-language-switcher-locales"', 'id="if-language-switcher-locales"'], $lang_html);
         }
     }
-    $inline_form = ifls_render_inline_form($action);
+    $inline_form = $inline_form ?? ifls_render_inline_form($action);
     $heading_html = '';
 
     // Keep each authentication flow's existing title text, but position the
@@ -1065,7 +1106,7 @@ function ifls_render_login_layout() {
                 <div class="if-logo-wrap"><img class="if-logo" src="<?php echo esc_url(INKFIRE_LOGIN_LOGO); ?>" alt="Inkfire" width="2048" height="912" decoding="async" fetchpriority="high" /></div>
                 <section class="if-teal">
                     <?php if ($heading_html) : ?><div class="if-heading-wrap"><?php echo $heading_html; ?></div><?php endif; ?>
-                    <div class="if-cta-row"><div class="if-cta-cell"><div class="if-card" id="if-login-card"><?php echo $inline_form; ?></div></div></div>
+                    <div class="if-cta-row"><div class="if-cta-cell"><div class="if-card" id="if-login-card"><?php echo $login_notice . $inline_form; ?></div></div></div>
                     <nav class="if-aux" aria-label="Account links">
                         <div class="if-aux-links">
                             <?php if ($action !== 'register' && get_option('users_can_register')) : ?>
@@ -1178,7 +1219,7 @@ register_deactivation_hook(__FILE__, 'ifls_deactivate_plugin');
 add_filter('login_headerurl', 'ifls_login_header_url');
 add_filter('login_headertext', 'ifls_login_header_text');
 add_filter('login_body_class', 'ifls_login_body_class');
-add_action('login_header', 'ifls_render_login_layout');
+add_action('login_header', 'ifls_login_header_layout');
 add_action('login_enqueue_scripts', ['IFLS_Asset_Manager', 'enqueue_assets']);
 add_filter('login_redirect', 'ifls_secure_login_redirect', 10, 3);
 add_filter('plugin_row_meta', 'ifls_plugin_row_meta', 10, 2);
