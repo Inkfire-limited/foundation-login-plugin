@@ -188,4 +188,6 @@ ifls_playground_assert(!is_wp_error($user) && true === retrieve_password('ifls_r
 ifls_playground_assert(1 === $reset_mail, 'Core account recovery did not reach the intercepted mail transport exactly once.');
 remove_filter('pre_wp_mail', $capture_reset);
 
+require __DIR__ . '/login-form-integrations.php';
+
 echo "WordPress Playground integration passed.\n";
