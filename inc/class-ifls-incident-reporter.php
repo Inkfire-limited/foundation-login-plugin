@@ -7,7 +7,7 @@
  *   1. Store locally BEFORE attempting to send. When the incident IS mail
  *      failure, the local copy is the only record that will ever exist.
  *
- *   2. Never send mail during an authentication request. Incidents are queued
+ *   2. Never send incident mail during ordinary requests. Incidents are queued
  *      and dispatched off the request path, because sending inline would block
  *      every failed login for the SMTP timeout on exactly those sites whose
  *      mail is already broken.
@@ -26,6 +26,11 @@ class IFLS_Incident_Reporter {
 
     const OPTION   = 'ifls_incidents';
     const MAX_KEPT = 50;
+    const DISPATCH_WINDOW = 'ifls_incident_dispatch_after';
+    const MAX_PER_WINDOW = 2;
+    const MAX_ATTEMPTS = 3;
+
+    private static $sending = false;
 
     /**
      * Identity of an incident for deduplication purposes.
@@ -49,7 +54,7 @@ class IFLS_Incident_Reporter {
      * @param array  $context Technical context only - no end-user PII.
      */
     public static function raise($type, $reason, array $context = []) {
-        if (!ifls_diag_enabled() || !ifls_diag_setting('reporting_enabled')) {
+        if (('mail_failure' === $type && self::$sending) || !ifls_diag_enabled() || !ifls_diag_setting('reporting_enabled')) {
             return;
         }
 
@@ -72,35 +77,29 @@ class IFLS_Incident_Reporter {
             return;
         }
 
-        $incidents   = self::incidents();
         $fingerprint = self::fingerprint($type, $reason);
         $now         = time();
         $cooldown    = absint(ifls_diag_setting('cooldown_hours')) * HOUR_IN_SECONDS;
 
-        foreach ($incidents as $i => $incident) {
-            if (!isset($incident['fingerprint']) || $incident['fingerprint'] !== $fingerprint) {
-                continue;
+        self::edit_incidents(static function (&$incidents) use ($type, $fingerprint, $reason, $context, $now, $cooldown) {
+            foreach ($incidents as &$incident) {
+                if (($incident['fingerprint'] ?? '') !== $fingerprint) {
+                    continue;
+                }
+                // A genuinely recurring, previously delivered alert can start a new cycle.
+                // Exhausted alerts remain available locally even if failures continue.
+                if ('sent' === $incident['status'] && $now - (int) $incident['first_seen'] >= $cooldown) {
+                    $incident['first_seen'] = $now;
+                    $incident['status'] = 'pending';
+                    unset($incident['attempts'], $incident['next_attempt']);
+                }
+                $incident['count']++;
+                $incident['last_seen'] = $now;
+                return true;
             }
+            unset($incident);
 
-            $incidents[$i]['count']     = (int) $incident['count'] + 1;
-            $incidents[$i]['last_seen'] = $now;
-
-            // Still inside the cooldown: count it, but do not queue another email.
-            if (($now - (int) $incident['first_seen']) < $cooldown) {
-                self::save($incidents);
-                return;
-            }
-
-            // Cooldown elapsed - re-arm this fingerprint for another alert.
-            $incidents[$i]['first_seen'] = $now;
-            $incidents[$i]['status']     = 'pending';
-            self::save($incidents);
-            return;
-        }
-
-        array_unshift(
-            $incidents,
-            [
+            array_unshift($incidents, [
                 'fingerprint' => $fingerprint,
                 'type'        => $type,
                 'reason'      => substr(sanitize_text_field((string) $reason), 0, 500),
@@ -109,10 +108,10 @@ class IFLS_Incident_Reporter {
                 'last_seen'   => $now,
                 'count'       => 1,
                 'status'      => 'pending',
-            ]
-        );
-
-        self::save(array_slice($incidents, 0, self::MAX_KEPT));
+            ]);
+            $incidents = array_slice($incidents, 0, self::MAX_KEPT);
+            return true;
+        });
     }
 
     /**
@@ -154,10 +153,39 @@ class IFLS_Incident_Reporter {
     }
 
     /**
-     * @param array $incidents Incidents to persist.
+     * Update the bounded queue only if nobody has edited it since the read.
+     * Never hold a database lock over a mail call. Retry on a concurrent edit.
      */
-    private static function save(array $incidents) {
-        update_option(self::OPTION, $incidents, false);
+    private static function edit_incidents(callable $edit) {
+        global $wpdb;
+        for ($try = 0; $try < 4; $try++) {
+            $old = $wpdb->get_var($wpdb->prepare("SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", self::OPTION));
+            $incidents = null === $old ? [] : maybe_unserialize($old);
+            if (!is_array($incidents) || !$edit($incidents)) {
+                return false;
+            }
+
+            $new = maybe_serialize($incidents);
+            if (null === $old) {
+                $saved = $wpdb->query($wpdb->prepare(
+                    "INSERT IGNORE INTO {$wpdb->options} (option_name, option_value, autoload) VALUES (%s, %s, 'no')",
+                    self::OPTION, $new
+                ));
+            } else {
+                $saved = $wpdb->update($wpdb->options, ['option_value' => $new], ['option_name' => self::OPTION, 'option_value' => $old]);
+            }
+            if (1 === $saved) {
+                wp_cache_delete(self::OPTION, 'options');
+                if (null === $old) {
+                    wp_cache_delete('notoptions', 'options');
+                }
+                return true;
+            }
+            if (false === $saved) {
+                return false;
+            }
+        }
+        return false;
     }
 
     /**
@@ -216,40 +244,86 @@ class IFLS_Incident_Reporter {
         }
     }
 
-    /**
-     * Send queued incidents.
-     *
-     * Cron and shutdown only. Never called during authentication.
-     */
+    /** Reserve a site-wide dispatch window, including across overlapping cron runners. */
+    private static function claim_window($now) {
+        global $wpdb;
+        $next = $now + 5 * MINUTE_IN_SECONDS;
+        $updated = $wpdb->query($wpdb->prepare(
+            "UPDATE {$wpdb->options} SET option_value = %s WHERE option_name = %s AND CAST(option_value AS UNSIGNED) <= %d",
+            (string) $next, self::DISPATCH_WINDOW, $now
+        ));
+        if (0 === $updated) {
+            $updated = $wpdb->query($wpdb->prepare(
+                "INSERT IGNORE INTO {$wpdb->options} (option_name, option_value, autoload) VALUES (%s, %s, 'no')",
+                self::DISPATCH_WINDOW, (string) $next
+            ));
+        }
+        return 1 === $updated;
+    }
+
+    private static function due(array $incident, $now) {
+        $status = $incident['status'] ?? '';
+        // Legacy failed alerts have an unknown attempt count. Keep them stopped.
+        return ('pending' === $status || ('failed' === $status && isset($incident['attempts'])))
+            && ($incident['attempts'] ?? 0) < self::MAX_ATTEMPTS
+            && ($incident['next_attempt'] ?? 0) <= $now;
+    }
+
+    /** Dispatch only from cron. Persist each attempt before handing it to transport. */
     public static function dispatch() {
-        if (!ifls_diag_enabled() || !ifls_diag_setting('reporting_enabled')) {
+        if (!wp_doing_cron() || !ifls_diag_enabled() || !ifls_diag_setting('reporting_enabled')
+            || !apply_filters('ifls_allow_incident_email_dispatch', true)) {
             return;
         }
 
-        try {
-            $incidents = self::incidents();
-            $changed   = false;
-
-            foreach ($incidents as $i => $incident) {
-                if (!isset($incident['status']) || 'sent' === $incident['status']) {
-                    continue;
+        $now = time();
+        $processed = 0;
+        foreach (array_reverse(self::incidents()) as $incident) {
+            if (!is_array($incident) || empty($incident['fingerprint']) || !self::due($incident, $now)) {
+                continue;
+            }
+            if (0 === $processed && !self::claim_window($now)) {
+                return;
+            }
+            $fingerprint = $incident['fingerprint'];
+            $attempt = 0;
+            $claimed = self::edit_incidents(static function (&$rows) use ($fingerprint, $now, &$attempt) {
+                foreach ($rows as &$row) {
+                    if ($row['fingerprint'] === $fingerprint && self::due($row, $now)) {
+                        $attempt = 1 + ($row['attempts'] ?? 0);
+                        $row['attempts'] = $attempt;
+                        $row['status'] = 'failed';
+                        $row['next_attempt'] = $now + (1 === $attempt ? 15 * MINUTE_IN_SECONDS : HOUR_IN_SECONDS);
+                        return true;
+                    }
                 }
-
-                $sent = wp_mail(
-                    ifls_diag_setting('report_email'),
-                    self::subject($incident),
-                    self::body($incident)
-                );
-
-                $incidents[$i]['status'] = $sent ? 'sent' : 'failed';
-                $changed                 = true;
+                return false;
+            });
+            if ($claimed) {
+                try {
+                    self::$sending = true;
+                    $sent = wp_mail(ifls_diag_setting('report_email'), self::subject($incident), self::body($incident));
+                } catch (\Throwable $e) {
+                    $sent = false;
+                } finally {
+                    self::$sending = false;
+                }
+                if ($sent) {
+                    self::edit_incidents(static function (&$rows) use ($fingerprint, $attempt, $incident) {
+                        foreach ($rows as &$row) {
+                            if ($row['fingerprint'] === $fingerprint && $row['first_seen'] === $incident['first_seen']
+                                && ($row['attempts'] ?? 0) === $attempt) {
+                                $row['status'] = 'sent';
+                                return true;
+                            }
+                        }
+                        return false;
+                    });
+                }
             }
-
-            if ($changed) {
-                self::save($incidents);
+            if (++$processed >= self::MAX_PER_WINDOW) {
+                return;
             }
-        } catch (\Throwable $e) {
-            // no-op
         }
     }
 

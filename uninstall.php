@@ -18,6 +18,7 @@ delete_option('ifls_health_status');
 // 2.1.0 additions
 delete_option('ifls_diagnostics_settings');
 delete_option('ifls_incidents');
+delete_option('ifls_incident_dispatch_after');
 delete_option('ifls_events_db_version');
 delete_option('ifls_security_verifications');
 
