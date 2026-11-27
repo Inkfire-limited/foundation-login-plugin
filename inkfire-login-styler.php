@@ -3,7 +3,7 @@
  * Plugin Name:       Foundation - Inkfire Login
  * Plugin URI:        https://github.com/Inkfire-limited/foundation-login-plugin/
  * Description:       Enterprise-grade login customizer. Secure, responsive, and branded.
- * Version:           2.3.3
+ * Version:           2.3.4
  * Author:            Sonny x Inkfire
  * Author URI:        https://inkfire.co.uk/
  * Text Domain:       inkfire-login-styler
@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 if (!defined('INKFIRE_LOGIN_BG'))   define('INKFIRE_LOGIN_BG',   plugins_url('assets/inkfire_background.png', __FILE__));
 if (!defined('INKFIRE_LOGIN_LOGO')) define('INKFIRE_LOGIN_LOGO', plugins_url('assets/inkfire_logo.webp', __FILE__));
 if (!defined('INKFIRE_LOGIN_ICON')) define('INKFIRE_LOGIN_ICON', plugins_url('assets/inkfire_icon.png', __FILE__));
-if (!defined('IFLS_VERSION'))       define('IFLS_VERSION',       '2.3.3');
+if (!defined('IFLS_VERSION'))       define('IFLS_VERSION',       '2.3.4');
 
 // Brand colors
 if (!defined('IF_TEAL'))   define('IF_TEAL',   '#1e4e47');
@@ -88,20 +88,6 @@ add_action('ifls_dispatch_incidents', function() {
     IFLS_Incident_Reporter::check_thresholds();
     IFLS_Incident_Reporter::dispatch();
 });
-
-// Opportunistic flush so alerts arrive promptly without waiting for cron -
-// but NEVER on wp-login.php, because an SMTP call there would block logins.
-add_action('shutdown', function() {
-    if (isset($GLOBALS['pagenow']) && 'wp-login.php' === $GLOBALS['pagenow']) {
-        return;
-    }
-
-    if (defined('DOING_CRON') && DOING_CRON) {
-        return; // The cron hook above already handles this.
-    }
-
-    IFLS_Incident_Reporter::dispatch();
-}, 1000);
 
 // Catch fatals originating inside this plugin. Kept deliberately minimal: this
 // runs during a crash and must not allocate or fail itself.
